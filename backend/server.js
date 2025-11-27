@@ -76,8 +76,13 @@ app.post('/api/auth/signup', async (req, res) => {
   try {
     const { name, email, password } = req.body;
     
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+    
     const hashedPassword = await bcrypt.hash(password, 10);
-    const token = jwt.sign({ userId: 1, email, role: 'USER' }, process.env.JWT_SECRET);
+    const jwtSecret = process.env.JWT_SECRET || 'fallback-secret-key';
+    const token = jwt.sign({ userId: 1, email, role: 'USER' }, jwtSecret);
     
     res.json({ 
       token, 
@@ -90,7 +95,7 @@ app.post('/api/auth/signup', async (req, res) => {
     });
   } catch (error) {
     console.error('Signup error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: error.message || 'Server error' });
   }
 });
 
@@ -98,7 +103,12 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    const token = jwt.sign({ userId: 1, email, role: 'USER' }, process.env.JWT_SECRET);
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+    
+    const jwtSecret = process.env.JWT_SECRET || 'fallback-secret-key';
+    const token = jwt.sign({ userId: 1, email, role: 'USER' }, jwtSecret);
     
     res.json({ 
       token, 
@@ -111,7 +121,7 @@ app.post('/api/auth/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: error.message || 'Server error' });
   }
 });
 
