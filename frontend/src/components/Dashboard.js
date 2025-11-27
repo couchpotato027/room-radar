@@ -1,22 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import config from '../config';
+import Header from './Header';
 import HostelCard from './HostelCard';
 import SearchFilters from './SearchFilters';
 
-const Dashboard = ({ user }) => {
+const Dashboard = ({ user, onLogout }) => {
   const [hostels, setHostels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({});
-  const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState({});
 
-  const fetchHostels = async (page = 1, filterParams = {}) => {
+  const fetchHostels = async (filterParams = {}) => {
     try {
       setLoading(true);
       const params = {
-        page,
-        limit: 9,
+        limit: 12,
         ...filterParams
       };
       
@@ -31,164 +30,125 @@ const Dashboard = ({ user }) => {
   };
 
   useEffect(() => {
-    fetchHostels(currentPage, filters);
-  }, [currentPage, filters]);
+    fetchHostels(filters);
+  }, [filters]);
 
   const handleFiltersChange = (newFilters) => {
     setFilters(newFilters);
-    setCurrentPage(1);
   };
 
   const handleHostelClick = (hostelId) => {
-    // Navigate to hostel details (implement routing)
     console.log('Navigate to hostel:', hostelId);
   };
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  if (loading && hostels.length === 0) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '400px',
-        color: '#a0aec0'
-      }}>
-        <div style={{
-          width: '40px',
-          height: '40px',
-          border: '3px solid #4a5568',
-          borderTop: '3px solid #ff6b35',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }}></div>
-        <span style={{ marginLeft: '1rem' }}>Loading hostels...</span>
-      </div>
-    );
-  }
-
   return (
-    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ color: '#f7fafc', fontSize: '2.5rem', fontWeight: '700', marginBottom: '0.5rem' }}>
-          🏠 Discover Perfect Hostels
-        </h1>
-        <p style={{ color: '#a0aec0', fontSize: '1.1rem' }}>
-          Find verified hostels and mess services with transparent pricing and genuine reviews
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <Header user={user} onLogout={onLogout} />
+      
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Hero Section */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Find Your Perfect Hostel
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Discover verified hostels and co-living spaces across India with transparent pricing and genuine reviews
+          </p>
+        </div>
 
-      <SearchFilters onFiltersChange={handleFiltersChange} />
+        {/* Search & Filters */}
+        <SearchFilters onFiltersChange={handleFiltersChange} />
 
-      {/* Stats */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-        gap: '1rem',
-        marginBottom: '2rem'
-      }}>
-        <div style={{
-          background: 'rgba(26, 32, 44, 0.95)',
-          borderRadius: '12px',
-          padding: '1rem',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          textAlign: 'center'
-        }}>
-          <div style={{ color: '#ff6b35', fontSize: '2rem', fontWeight: '700' }}>
-            {pagination.total || 0}
+        {/* Results Header */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h2 className="text-2xl font-semibold text-gray-900">
+              {pagination.total || 0} hostels found
+            </h2>
+            <p className="text-gray-600">
+              Showing verified properties with real pricing
+            </p>
           </div>
-          <div style={{ color: '#a0aec0' }}>Total Hostels</div>
-        </div>
-        
-        <div style={{
-          background: 'rgba(26, 32, 44, 0.95)',
-          borderRadius: '12px',
-          padding: '1rem',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          textAlign: 'center'
-        }}>
-          <div style={{ color: '#ff6b35', fontSize: '2rem', fontWeight: '700' }}>
-            {hostels.filter(h => h.averageRating >= 4).length}
+          
+          {/* Quick Stats */}
+          <div className="hidden md:flex gap-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary-600">
+                {hostels.filter(h => h.isVerified).length}
+              </div>
+              <div className="text-sm text-gray-500">Verified</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">
+                {hostels.filter(h => h.availableRooms > 0).length}
+              </div>
+              <div className="text-sm text-gray-500">Available</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-yellow-600">
+                {hostels.filter(h => h.rating >= 4.0).length}
+              </div>
+              <div className="text-sm text-gray-500">Top Rated</div>
+            </div>
           </div>
-          <div style={{ color: '#a0aec0' }}>Highly Rated</div>
         </div>
-        
-        <div style={{
-          background: 'rgba(26, 32, 44, 0.95)',
-          borderRadius: '12px',
-          padding: '1rem',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          textAlign: 'center'
-        }}>
-          <div style={{ color: '#ff6b35', fontSize: '2rem', fontWeight: '700' }}>
-            {hostels.filter(h => h.availableRooms > 0).length}
+
+        {/* Loading State */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="card animate-pulse">
+                <div className="h-48 bg-gray-200 rounded-t-xl"></div>
+                <div className="p-4">
+                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded mb-4 w-2/3"></div>
+                  <div className="flex gap-2 mb-4">
+                    <div className="h-6 bg-gray-200 rounded-full w-16"></div>
+                    <div className="h-6 bg-gray-200 rounded-full w-20"></div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="h-6 bg-gray-200 rounded w-24"></div>
+                    <div className="h-8 bg-gray-200 rounded w-20"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-          <div style={{ color: '#a0aec0' }}>Available Now</div>
-        </div>
-      </div>
+        ) : (
+          <>
+            {/* Hostels Grid */}
+            {hostels.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {hostels.map(hostel => (
+                  <HostelCard 
+                    key={hostel.id} 
+                    hostel={hostel} 
+                    onClick={handleHostelClick}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                  <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No hostels found</h3>
+                <p className="text-gray-600 mb-4">Try adjusting your search criteria or filters</p>
+                <button 
+                  onClick={() => handleFiltersChange({})}
+                  className="btn-primary"
+                >
+                  Clear all filters
+                </button>
+              </div>
+            )}
+          </>
+        )}
 
-      {/* Hostels Grid */}
-      {hostels.length > 0 ? (
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
-          gap: '1.5rem',
-          marginBottom: '2rem'
-        }}>
-          {hostels.map(hostel => (
-            <HostelCard 
-              key={hostel.id} 
-              hostel={hostel} 
-              onClick={handleHostelClick}
-            />
-          ))}
-        </div>
-      ) : (
-        <div style={{
-          background: 'rgba(26, 32, 44, 0.95)',
-          borderRadius: '16px',
-          padding: '3rem',
-          textAlign: 'center',
-          border: '1px solid rgba(255, 255, 255, 0.1)'
-        }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
-          <h3 style={{ color: '#f7fafc', marginBottom: '0.5rem' }}>No hostels found</h3>
-          <p style={{ color: '#a0aec0' }}>Try adjusting your search filters</p>
-        </div>
-      )}
-
-      {/* Pagination */}
-      {pagination.pages > 1 && (
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          gap: '0.5rem',
-          marginTop: '2rem'
-        }}>
-          {Array.from({ length: pagination.pages }, (_, i) => i + 1).map(page => (
-            <button
-              key={page}
-              onClick={() => handlePageChange(page)}
-              style={{
-                padding: '0.5rem 1rem',
-                border: 'none',
-                borderRadius: '8px',
-                background: page === currentPage 
-                  ? 'linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)'
-                  : 'rgba(26, 32, 44, 0.95)',
-                color: 'white',
-                cursor: 'pointer',
-                fontWeight: page === currentPage ? '600' : '400'
-              }}
-            >
-              {page}
-            </button>
-          ))}
-        </div>
-      )}
+        {/* Load More / Pagination could go here */}
+      </main>
     </div>
   );
 };

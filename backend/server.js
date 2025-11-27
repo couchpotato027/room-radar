@@ -24,35 +24,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// Sample data
-const sampleHostels = [
-  {
-    id: 1,
-    name: "Green Valley Hostel",
-    city: "Delhi",
-    monthlyRent: 8000,
-    genderPreference: "MIXED",
-    roomType: "SHARED",
-    wifi: true,
-    ac: true,
-    mess: true,
-    averageRating: 4.2,
-    reviewCount: 15
-  },
-  {
-    id: 2,
-    name: "Student Paradise",
-    city: "Mumbai",
-    monthlyRent: 12000,
-    genderPreference: "MALE",
-    roomType: "SINGLE",
-    wifi: true,
-    ac: false,
-    mess: true,
-    averageRating: 4.5,
-    reviewCount: 23
-  }
-];
+// Real hostel data
+const realHostels = require('./data/hostels');
 
 app.get('/', (req, res) => {
   res.json({ message: 'Room Radar API Server is running!', status: 'OK' });
@@ -104,12 +77,57 @@ app.post('/api/auth/login', (req, res) => {
 });
 
 app.get('/api/hostels', (req, res) => {
+  const { search, city, minPrice, maxPrice, genderPreference, roomType, sortBy = 'rating', sortOrder = 'desc' } = req.query;
+  
+  let filteredHostels = [...realHostels];
+  
+  // Apply filters
+  if (search) {
+    filteredHostels = filteredHostels.filter(h => 
+      h.name.toLowerCase().includes(search.toLowerCase()) ||
+      h.city.toLowerCase().includes(search.toLowerCase()) ||
+      h.area.toLowerCase().includes(search.toLowerCase())
+    );
+  }
+  
+  if (city) {
+    filteredHostels = filteredHostels.filter(h => h.city.toLowerCase().includes(city.toLowerCase()));
+  }
+  
+  if (minPrice) {
+    filteredHostels = filteredHostels.filter(h => h.monthlyRent >= parseInt(minPrice));
+  }
+  
+  if (maxPrice) {
+    filteredHostels = filteredHostels.filter(h => h.monthlyRent <= parseInt(maxPrice));
+  }
+  
+  if (genderPreference) {
+    filteredHostels = filteredHostels.filter(h => h.genderPreference === genderPreference);
+  }
+  
+  if (roomType) {
+    filteredHostels = filteredHostels.filter(h => h.roomType === roomType);
+  }
+  
+  // Apply sorting
+  filteredHostels.sort((a, b) => {
+    let aVal = a[sortBy];
+    let bVal = b[sortBy];
+    
+    if (sortOrder === 'desc') {
+      return bVal > aVal ? 1 : -1;
+    } else {
+      return aVal > bVal ? 1 : -1;
+    }
+  });
+  
   res.json({
-    hostels: sampleHostels,
+    hostels: filteredHostels,
     pagination: {
       page: 1,
       limit: 10,
-      total: sampleHostels.length,
+      total: filteredHostels.length,
       pages: 1
     }
   });

@@ -8,9 +8,11 @@ const SearchFilters = ({ onFiltersChange }) => {
     maxPrice: '',
     genderPreference: '',
     roomType: '',
-    sortBy: 'createdAt',
+    sortBy: 'rating',
     sortOrder: 'desc'
   });
+
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleFilterChange = (key, value) => {
     const newFilters = { ...filters, [key]: value };
@@ -18,184 +20,166 @@ const SearchFilters = ({ onFiltersChange }) => {
     onFiltersChange(newFilters);
   };
 
+  const clearFilters = () => {
+    const resetFilters = {
+      search: '',
+      city: '',
+      minPrice: '',
+      maxPrice: '',
+      genderPreference: '',
+      roomType: '',
+      sortBy: 'rating',
+      sortOrder: 'desc'
+    };
+    setFilters(resetFilters);
+    onFiltersChange(resetFilters);
+  };
+
+  const cities = ['Delhi', 'Mumbai', 'Bangalore', 'Pune', 'Hyderabad', 'Chennai', 'Noida', 'Gurgaon'];
+
   return (
-    <div style={{
-      background: 'rgba(26, 32, 44, 0.95)',
-      borderRadius: '16px',
-      padding: '1.5rem',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
-      marginBottom: '2rem'
-    }}>
-      <h3 style={{ color: '#f7fafc', marginBottom: '1rem', fontSize: '1.2rem' }}>
-        🔍 Search & Filter
-      </h3>
-      
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-        {/* Search */}
-        <input
-          type="text"
-          placeholder="Search hostels, city..."
-          value={filters.search}
-          onChange={(e) => handleFilterChange('search', e.target.value)}
-          style={{
-            padding: '0.75rem',
-            border: '2px solid #4a5568',
-            borderRadius: '8px',
-            background: '#2d3748',
-            color: '#f7fafc',
-            fontSize: '0.9rem'
-          }}
-        />
-        
-        {/* City */}
-        <input
-          type="text"
-          placeholder="City"
-          value={filters.city}
-          onChange={(e) => handleFilterChange('city', e.target.value)}
-          style={{
-            padding: '0.75rem',
-            border: '2px solid #4a5568',
-            borderRadius: '8px',
-            background: '#2d3748',
-            color: '#f7fafc',
-            fontSize: '0.9rem'
-          }}
-        />
-        
-        {/* Price Range */}
-        <input
-          type="number"
-          placeholder="Min Price"
-          value={filters.minPrice}
-          onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-          style={{
-            padding: '0.75rem',
-            border: '2px solid #4a5568',
-            borderRadius: '8px',
-            background: '#2d3748',
-            color: '#f7fafc',
-            fontSize: '0.9rem'
-          }}
-        />
-        
-        <input
-          type="number"
-          placeholder="Max Price"
-          value={filters.maxPrice}
-          onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-          style={{
-            padding: '0.75rem',
-            border: '2px solid #4a5568',
-            borderRadius: '8px',
-            background: '#2d3748',
-            color: '#f7fafc',
-            fontSize: '0.9rem'
-          }}
-        />
-        
-        {/* Gender Preference */}
-        <select
-          value={filters.genderPreference}
-          onChange={(e) => handleFilterChange('genderPreference', e.target.value)}
-          style={{
-            padding: '0.75rem',
-            border: '2px solid #4a5568',
-            borderRadius: '8px',
-            background: '#2d3748',
-            color: '#f7fafc',
-            fontSize: '0.9rem'
-          }}
-        >
-          <option value="">All Genders</option>
-          <option value="MALE">Male Only</option>
-          <option value="FEMALE">Female Only</option>
-          <option value="MIXED">Mixed</option>
-        </select>
-        
-        {/* Room Type */}
-        <select
-          value={filters.roomType}
-          onChange={(e) => handleFilterChange('roomType', e.target.value)}
-          style={{
-            padding: '0.75rem',
-            border: '2px solid #4a5568',
-            borderRadius: '8px',
-            background: '#2d3748',
-            color: '#f7fafc',
-            fontSize: '0.9rem'
-          }}
-        >
-          <option value="">All Room Types</option>
-          <option value="SINGLE">Single</option>
-          <option value="SHARED">Shared</option>
-          <option value="DORMITORY">Dormitory</option>
-        </select>
-        
-        {/* Sort By */}
-        <select
-          value={filters.sortBy}
-          onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-          style={{
-            padding: '0.75rem',
-            border: '2px solid #4a5568',
-            borderRadius: '8px',
-            background: '#2d3748',
-            color: '#f7fafc',
-            fontSize: '0.9rem'
-          }}
-        >
-          <option value="createdAt">Latest</option>
-          <option value="monthlyRent">Price</option>
-          <option value="name">Name</option>
-        </select>
-        
-        {/* Sort Order */}
-        <select
-          value={filters.sortOrder}
-          onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
-          style={{
-            padding: '0.75rem',
-            border: '2px solid #4a5568',
-            borderRadius: '8px',
-            background: '#2d3748',
-            color: '#f7fafc',
-            fontSize: '0.9rem'
-          }}
-        >
-          <option value="desc">High to Low</option>
-          <option value="asc">Low to High</option>
-        </select>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+      {/* Main Search */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+        {/* Search Input */}
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Search hostels, areas, or landmarks
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="e.g., Koramangala, Zolo, near metro..."
+              value={filters.search}
+              onChange={(e) => handleFilterChange('search', e.target.value)}
+              className="input-field pl-10"
+            />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* City Filter */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+          <select
+            value={filters.city}
+            onChange={(e) => handleFilterChange('city', e.target.value)}
+            className="input-field"
+          >
+            <option value="">All Cities</option>
+            {cities.map(city => (
+              <option key={city} value={city}>{city}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Sort */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Sort by</label>
+          <select
+            value={`${filters.sortBy}-${filters.sortOrder}`}
+            onChange={(e) => {
+              const [sortBy, sortOrder] = e.target.value.split('-');
+              handleFilterChange('sortBy', sortBy);
+              handleFilterChange('sortOrder', sortOrder);
+            }}
+            className="input-field"
+          >
+            <option value="rating-desc">Highest Rated</option>
+            <option value="monthlyRent-asc">Price: Low to High</option>
+            <option value="monthlyRent-desc">Price: High to Low</option>
+            <option value="reviewCount-desc">Most Reviewed</option>
+          </select>
+        </div>
       </div>
-      
-      <button
-        onClick={() => {
-          const resetFilters = {
-            search: '',
-            city: '',
-            minPrice: '',
-            maxPrice: '',
-            genderPreference: '',
-            roomType: '',
-            sortBy: 'createdAt',
-            sortOrder: 'desc'
-          };
-          setFilters(resetFilters);
-          onFiltersChange(resetFilters);
-        }}
-        style={{
-          marginTop: '1rem',
-          background: 'rgba(255, 107, 53, 0.2)',
-          color: '#ff6b35',
-          border: '1px solid #ff6b35',
-          padding: '0.5rem 1rem',
-          borderRadius: '8px',
-          cursor: 'pointer',
-          fontSize: '0.9rem'
-        }}
-      >
-        Clear Filters
-      </button>
+
+      {/* Advanced Filters Toggle */}
+      <div className="flex justify-between items-center">
+        <button
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium text-sm transition-colors"
+        >
+          <svg 
+            className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+          {showAdvanced ? 'Hide' : 'Show'} Advanced Filters
+        </button>
+
+        {(filters.search || filters.city || filters.minPrice || filters.maxPrice || filters.genderPreference || filters.roomType) && (
+          <button
+            onClick={clearFilters}
+            className="text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors"
+          >
+            Clear all filters
+          </button>
+        )}
+      </div>
+
+      {/* Advanced Filters */}
+      {showAdvanced && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-200 animate-slide-up">
+          {/* Price Range */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Min Price</label>
+            <input
+              type="number"
+              placeholder="₹5,000"
+              value={filters.minPrice}
+              onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+              className="input-field"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Max Price</label>
+            <input
+              type="number"
+              placeholder="₹25,000"
+              value={filters.maxPrice}
+              onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+              className="input-field"
+            />
+          </div>
+
+          {/* Gender Preference */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Gender Preference</label>
+            <select
+              value={filters.genderPreference}
+              onChange={(e) => handleFilterChange('genderPreference', e.target.value)}
+              className="input-field"
+            >
+              <option value="">Any</option>
+              <option value="MALE">Male Only</option>
+              <option value="FEMALE">Female Only</option>
+              <option value="MIXED">Co-ed</option>
+            </select>
+          </div>
+
+          {/* Room Type */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Room Type</label>
+            <select
+              value={filters.roomType}
+              onChange={(e) => handleFilterChange('roomType', e.target.value)}
+              className="input-field"
+            >
+              <option value="">Any</option>
+              <option value="SINGLE">Private Room</option>
+              <option value="SHARED">Shared Room</option>
+            </select>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
