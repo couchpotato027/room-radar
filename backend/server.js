@@ -1,26 +1,17 @@
 const express = require('express');
 const cors = require('cors');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
 
 const app = express();
 
-// Enable CORS for all routes
-app.use(cors({
-  origin: true,
-  credentials: true
-}));
-
+app.use(cors());
 app.use(express.json());
 
-// Sample data for demo
+// Sample data
 const sampleHostels = [
   {
     id: 1,
     name: "Green Valley Hostel",
     city: "Delhi",
-    address: "Sector 15, Noida",
     monthlyRent: 8000,
     genderPreference: "MIXED",
     roomType: "SHARED",
@@ -28,15 +19,12 @@ const sampleHostels = [
     ac: true,
     mess: true,
     averageRating: 4.2,
-    reviewCount: 15,
-    availableRooms: 5,
-    totalRooms: 20
+    reviewCount: 15
   },
   {
     id: 2,
     name: "Student Paradise",
     city: "Mumbai",
-    address: "Andheri West",
     monthlyRent: 12000,
     genderPreference: "MALE",
     roomType: "SINGLE",
@@ -44,108 +32,55 @@ const sampleHostels = [
     ac: false,
     mess: true,
     averageRating: 4.5,
-    reviewCount: 23,
-    availableRooms: 2,
-    totalRooms: 15
-  },
-  {
-    id: 3,
-    name: "Tech Hub Residency",
-    city: "Bangalore",
-    address: "Koramangala",
-    monthlyRent: 15000,
-    genderPreference: "FEMALE",
-    roomType: "SHARED",
-    wifi: true,
-    ac: true,
-    mess: false,
-    averageRating: 4.8,
-    reviewCount: 31,
-    availableRooms: 8,
-    totalRooms: 25
+    reviewCount: 23
   }
 ];
 
-// Root route
 app.get('/', (req, res) => {
   res.json({ message: 'Room Radar API Server is running!', status: 'OK' });
 });
 
-// Authentication Routes
-app.post('/api/auth/signup', async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
-    
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: 'All fields are required' });
-    }
-    
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const jwtSecret = process.env.JWT_SECRET || 'fallback-secret-key';
-    const token = jwt.sign({ userId: 1, email, role: 'USER' }, jwtSecret);
-    
-    res.json({ 
-      token, 
-      user: { 
-        id: 1, 
-        name, 
-        email, 
-        role: 'USER' 
-      } 
-    });
-  } catch (error) {
-    console.error('Signup error:', error);
-    res.status(500).json({ error: error.message || 'Server error' });
-  }
+app.post('/api/auth/signup', (req, res) => {
+  const { name, email, password } = req.body;
+  
+  res.json({ 
+    token: 'demo-token-123', 
+    user: { 
+      id: 1, 
+      name: name || 'Demo User', 
+      email: email || 'demo@example.com', 
+      role: 'USER' 
+    } 
+  });
 });
 
-app.post('/api/auth/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
-    
-    const jwtSecret = process.env.JWT_SECRET || 'fallback-secret-key';
-    const token = jwt.sign({ userId: 1, email, role: 'USER' }, jwtSecret);
-    
-    res.json({ 
-      token, 
-      user: { 
-        id: 1, 
-        name: 'Demo User', 
-        email, 
-        role: 'USER' 
-      } 
-    });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: error.message || 'Server error' });
-  }
+app.post('/api/auth/login', (req, res) => {
+  const { email } = req.body;
+  
+  res.json({ 
+    token: 'demo-token-123', 
+    user: { 
+      id: 1, 
+      name: 'Demo User', 
+      email: email || 'demo@example.com', 
+      role: 'USER' 
+    } 
+  });
 });
 
-// Hostel Routes
 app.get('/api/hostels', (req, res) => {
-  try {
-    const { page = 1, limit = 10 } = req.query;
-    
-    res.json({
-      hostels: sampleHostels,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total: sampleHostels.length,
-        pages: 1
-      }
-    });
-  } catch (error) {
-    console.error('Get hostels error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
+  res.json({
+    hostels: sampleHostels,
+    pagination: {
+      page: 1,
+      limit: 10,
+      total: sampleHostels.length,
+      pages: 1
+    }
+  });
 });
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
