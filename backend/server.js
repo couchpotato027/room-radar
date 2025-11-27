@@ -3,7 +3,10 @@ const cors = require('cors');
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: ['https://room-radar-wheat.vercel.app', 'http://localhost:3000'],
+  credentials: true
+}));
 app.use(express.json());
 
 // Sample data
@@ -41,6 +44,7 @@ app.get('/', (req, res) => {
 });
 
 app.post('/api/auth/signup', (req, res) => {
+  console.log('Signup request received:', req.body);
   const { name, email, password } = req.body;
   
   res.json({ 
