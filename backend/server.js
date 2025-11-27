@@ -3,11 +3,15 @@ const cors = require('cors');
 
 const app = express();
 
-app.use(cors({
-  origin: ['https://room-radar-wheat.vercel.app', 'http://localhost:3000'],
-  credentials: true
-}));
+// Allow all origins for debugging
+app.use(cors());
 app.use(express.json());
+
+// Debug middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`, req.body);
+  next();
+});
 
 // Sample data
 const sampleHostels = [
@@ -44,18 +48,26 @@ app.get('/', (req, res) => {
 });
 
 app.post('/api/auth/signup', (req, res) => {
-  console.log('Signup request received:', req.body);
-  const { name, email, password } = req.body;
-  
-  res.json({ 
-    token: 'demo-token-123', 
-    user: { 
-      id: 1, 
-      name: name || 'Demo User', 
-      email: email || 'demo@example.com', 
-      role: 'USER' 
-    } 
-  });
+  try {
+    console.log('Signup request received:', req.body);
+    const { name, email, password } = req.body;
+    
+    const response = { 
+      token: 'demo-token-123', 
+      user: { 
+        id: 1, 
+        name: name || 'Demo User', 
+        email: email || 'demo@example.com', 
+        role: 'USER' 
+      } 
+    };
+    
+    console.log('Sending response:', response);
+    res.status(200).json(response);
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(500).json({ error: 'Server error: ' + error.message });
+  }
 });
 
 app.post('/api/auth/login', (req, res) => {
