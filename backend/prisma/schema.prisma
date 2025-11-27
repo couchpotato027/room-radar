@@ -12,6 +12,146 @@ model User {
   email     String   @unique
   password  String
   name      String
+  phone     String?
+  role      Role     @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  // Relations
+  hostels   Hostel[]
+  reviews   Review[]
+  expenses  Expense[]
+  bookings  Booking[]
+}
+
+model Hostel {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String   @db.Text
+  address     String
+  city        String
+  state       String
+  pincode     String
+  latitude    Float?
+  longitude   Float?
+  
+  // Pricing
+  monthlyRent Int
+  securityDeposit Int?
+  
+  // Facilities
+  wifi        Boolean  @default(false)
+  ac          Boolean  @default(false)
+  mess        Boolean  @default(false)
+  laundry     Boolean  @default(false)
+  parking     Boolean  @default(false)
+  
+  // Preferences
+  genderPreference GenderType @default(MIXED)
+  roomType    RoomType @default(SHARED)
+  
+  // Metadata
+  isVerified  Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  totalRooms  Int
+  availableRooms Int
+  
+  // Relations
+  ownerId     Int
+  owner       User     @relation(fields: [ownerId], references: [id])
+  reviews     Review[]
+  bookings    Booking[]
+  images      HostelImage[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model HostelImage {
+  id        Int    @id @default(autoincrement())
+  url       String
+  hostelId  Int
+  hostel    Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    Int      // 1-5 stars
+  comment   String   @db.Text
+  
+  // Relations
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  hostelId  Int
+  hostel    Hostel   @relation(fields: [hostelId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, hostelId]) // One review per user per hostel
+}
+
+model Booking {
+  id          Int      @id @default(autoincrement())
+  checkIn     DateTime
+  checkOut    DateTime?
+  status      BookingStatus @default(PENDING)
+  totalAmount Int
+  
+  // Relations
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  hostelId    Int
+  hostel      Hostel   @relation(fields: [hostelId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Expense {
+  id          Int      @id @default(autoincrement())
+  title       String
+  amount      Float
+  description String?
+  category    ExpenseCategory @default(OTHER)
+  
+  // Split details
+  paidBy      Int
+  payer       User     @relation(fields: [paidBy], references: [id])
+  splitWith   Json     // Array of user IDs and amounts
+  
+  createdAt   DateTime @default(now())
+}
+
+// Enums
+enum Role {
+  USER
+  OWNER
+  ADMIN
+}
+
+enum GenderType {
+  MALE
+  FEMALE
+  MIXED
+}
+
+enum RoomType {
+  SINGLE
+  SHARED
+  DORMITORY
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum ExpenseCategory {
+  RENT
+  FOOD
+  UTILITIES
+  MAINTENANCE
+  OTHER
 }

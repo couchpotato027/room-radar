@@ -1,64 +1,263 @@
-# Room Radar
+# 🏠 RoomRadar - Smart Hostel & Accommodation Discovery Platform
 
-A Node.js + React application with authentication using Prisma and MySQL.
+**Finding reliable hostels and mess services made simple, transparent, and trustworthy.**
 
-## Setup Instructions
+## 🧠 Problem Statement
+
+Students and working professionals struggle to find trustworthy accommodation options. Existing sources are scattered, unverified, and lack transparency in pricing and quality.
+
+**RoomRadar solves this by providing:**
+- ✅ Verified hostel & mess listings
+- ⭐ User reviews and ratings  
+- 📍 Location-based search with maps
+- 💰 Transparent pricing and facility comparison
+- 💸 Expense sharing for roommates
+- 🔍 Advanced search, sort & filter options
+
+## 🏗️ System Architecture
+
+| Layer | Technologies |
+|-------|-------------|
+| **Frontend** | React.js, React Router, Axios, Modern CSS |
+| **Backend** | Node.js, Express.js, Prisma ORM |
+| **Database** | MySQL (Aiven Cloud) |
+| **Authentication** | JWT-based secure login |
+| **Hosting** | Netlify (Frontend), Render (Backend) |
+
+## ✨ Key Features
+
+### 🔐 **Authentication & Authorization**
+- User registration & login with JWT
+- Role-based access (User / Owner / Admin)
+- Secure password hashing
+
+### 🏠 **Hostel Management**
+- Complete CRUD operations for hostels
+- Detailed hostel information (pricing, facilities, location)
+- Image uploads and gallery
+- Availability tracking
+
+### 🔍 **Advanced Search & Discovery**
+- **Search**: By name, city, or location
+- **Sort**: By price, rating, or date
+- **Filter**: Gender preference, room type, price range, facilities
+- **Pagination**: Optimized performance for large datasets
+
+### ⭐ **Reviews & Ratings System**
+- Authentic user reviews and ratings
+- Average rating calculation
+- Review moderation and verification
+
+### 💸 **Expense Sharing (Splitwise-like)**
+- Split bills among roommates
+- Track shared expenses
+- Category-wise expense management
+- Settlement tracking
+
+### 📍 **Location Features**
+- Map integration for hostel locations
+- Nearby services discovery
+- Distance-based search
+
+### 📱 **Modern UI/UX**
+- Dark theme with warm orange accents
+- Responsive design for all devices
+- Smooth animations and transitions
+- Professional, trustworthy appearance
+
+## 🛠️ API Endpoints
+
+### Authentication
+| Endpoint | Method | Description | Access |
+|----------|--------|-------------|--------|
+| `/api/auth/signup` | POST | Register new user | Public |
+| `/api/auth/login` | POST | Authenticate user | Public |
+
+### Hostels
+| Endpoint | Method | Description | Access |
+|----------|--------|-------------|--------|
+| `/api/hostels` | GET | Get hostels with filters | Authenticated |
+| `/api/hostels/:id` | GET | Get specific hostel | Authenticated |
+| `/api/hostels` | POST | Create hostel listing | Owner/Admin |
+| `/api/hostels/:id` | PUT | Update hostel info | Owner/Admin |
+| `/api/hostels/:id` | DELETE | Delete hostel | Admin |
+
+### Reviews
+| Endpoint | Method | Description | Access |
+|----------|--------|-------------|--------|
+| `/api/reviews` | POST | Add hostel review | Authenticated |
+
+### Expenses
+| Endpoint | Method | Description | Access |
+|----------|--------|-------------|--------|
+| `/api/expenses` | GET | Get user expenses | Authenticated |
+| `/api/expenses` | POST | Add/split expense | Authenticated |
+
+## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js (v18+)
-- MySQL Workbench
-- MySQL Server
+- MySQL database (Aiven)
+- Git
 
-### Database Setup
-1. Open MySQL Workbench
-2. Create a new database:
-   ```sql
-   CREATE DATABASE room_radar;
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/couchpotato027/room-radar.git
+   cd room-radar
    ```
-3. Update the `.env` file in the backend folder with your MySQL credentials
 
-### Backend Setup
-1. Navigate to backend folder:
+2. **Backend Setup**
    ```bash
    cd backend
-   ```
-2. Install dependencies:
-   ```bash
    npm install
-   ```
-3. Generate Prisma client:
-   ```bash
+   
+   # Configure environment variables
+   cp .env.example .env
+   # Add your database URL and JWT secret
+   
+   # Generate Prisma client and create tables
    npx prisma generate
-   ```
-4. Run database migrations:
-   ```bash
    npx prisma db push
-   ```
-5. Start the server:
-   ```bash
-   npm run dev
-   ```
-
-### Frontend Setup
-1. Navigate to frontend folder:
-   ```bash
-   cd frontend
-   ```
-2. Install dependencies (already done):
-   ```bash
-   npm install
-   ```
-3. Start the React app:
-   ```bash
+   
+   # Start backend server
    npm start
    ```
 
-## Usage
-- Backend runs on http://localhost:5000
-- Frontend runs on http://localhost:3000
-- Use the signup form to create a new account
-- Use the login form to authenticate existing users
+3. **Frontend Setup**
+   ```bash
+   cd frontend
+   npm install
+   npm start
+   ```
 
-## API Endpoints
-- POST `/api/signup` - Create new user account
-- POST `/api/login` - Authenticate user
+### Environment Variables
+
+**Backend (.env)**
+```env
+DATABASE_URL="mysql://username:password@host:port/database"
+JWT_SECRET="your-super-secret-jwt-key"
+PORT=3001
+```
+
+## 📊 Database Schema
+
+### Core Models
+- **User**: Authentication and profile management
+- **Hostel**: Accommodation listings with detailed information
+- **Review**: User reviews and ratings
+- **Booking**: Reservation management
+- **Expense**: Shared expense tracking
+- **HostelImage**: Image management for hostels
+
+### Key Relationships
+- Users can own multiple hostels
+- Users can review hostels (one review per hostel)
+- Users can create and participate in expense sharing
+- Hostels have multiple images and reviews
+
+## 🎯 Advanced Features Implemented
+
+### 1. **Smart Search & Filtering**
+- Multi-parameter search (name, city, facilities)
+- Price range filtering
+- Gender and room type preferences
+- Sorting by price, rating, or recency
+
+### 2. **Pagination System**
+- Server-side pagination for performance
+- Configurable page sizes
+- Navigation controls
+
+### 3. **Review System**
+- Star ratings (1-5)
+- Written reviews
+- Average rating calculation
+- Review authenticity (one per user per hostel)
+
+### 4. **Expense Management**
+- Create shared expenses
+- Split bills among multiple users
+- Category-wise tracking
+- Settlement calculations
+
+## 🔧 Technical Highlights
+
+### Backend Architecture
+- **Prisma ORM** for type-safe database operations
+- **JWT Authentication** with role-based access
+- **RESTful API** design with proper HTTP status codes
+- **Error handling** and validation
+- **CORS** configuration for cross-origin requests
+
+### Frontend Architecture
+- **React Hooks** for state management
+- **Axios** for API communication
+- **Component-based** architecture
+- **Responsive design** with modern CSS
+- **Environment-based** configuration
+
+### Database Design
+- **Normalized schema** with proper relationships
+- **Indexes** for performance optimization
+- **Constraints** for data integrity
+- **Enums** for standardized values
+
+## 🚀 Deployment
+
+### Production URLs
+- **Frontend**: https://room-radar-frontend.netlify.app
+- **Backend**: https://room-radar-backend.onrender.com
+- **Database**: Aiven MySQL Cloud
+
+### Deployment Process
+1. **Database**: Aiven MySQL service
+2. **Backend**: Render with environment variables
+3. **Frontend**: Netlify with build optimization
+
+## 📈 Future Enhancements
+
+### Phase 2 Features
+- 🤖 **AI-based recommendations** using user preferences
+- 💬 **Real-time chat** between owners and tenants
+- 📸 **Photo verification** and document upload
+- 🗺️ **Google Maps integration** for location services
+- 📱 **Mobile app** development
+- 🔔 **Push notifications** for bookings and updates
+
+### Phase 3 Features
+- 🏢 **Multi-city expansion** with city-specific features
+- 💳 **Payment gateway** integration
+- 📊 **Analytics dashboard** for owners
+- 🎯 **Targeted marketing** tools
+- 🔒 **Advanced security** features
+
+## 👥 Team
+
+**Developed by**: Priyansh Satija  
+**Instructor**: Vishal Sharma Sir  
+**Institution**: [Your Institution Name]  
+**Submission Date**: November 27, 2024
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📞 Support
+
+For support and queries:
+- 📧 Email: [your-email@example.com]
+- 🐛 Issues: [GitHub Issues](https://github.com/couchpotato027/room-radar/issues)
+
+---
+
+**RoomRadar** - Making accommodation discovery simple, transparent, and trustworthy! 🏠✨

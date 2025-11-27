@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Login from './components/Login';
 import Signup from './components/Signup';
+import Dashboard from './components/Dashboard';
 import './App.css';
 
 function App() {
@@ -65,10 +66,7 @@ function App() {
           </div>
         </header>
         
-        <main className="dashboard">
-          <h2>Welcome to Room Radar Dashboard</h2>
-          <p>You are successfully logged in!</p>
-        </main>
+        <Dashboard user={user} />
       </div>
     );
   }
