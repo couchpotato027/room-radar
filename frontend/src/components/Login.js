@@ -13,7 +13,7 @@ const Login = ({ onLogin, switchToSignup }) => {
     setError('');
     
     try {
-      const response = await axios.post(`${config.API_URL}/api/login`, formData);
+      const response = await axios.post(`${config.API_URL}/api/auth/login`, formData);
       localStorage.setItem('token', response.data.token);
       onLogin(response.data.user);
     } catch (error) {
