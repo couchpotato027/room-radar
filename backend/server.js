@@ -58,6 +58,14 @@ app.get('/', (req, res) => {
   res.json({ message: 'Room Radar API Server is running!', status: 'OK' });
 });
 
+app.get('/test', (req, res) => {
+  res.json({ message: 'Test endpoint working!', timestamp: new Date().toISOString() });
+});
+
+app.post('/test-signup', (req, res) => {
+  res.json({ message: 'Test signup working!', body: req.body });
+});
+
 app.post('/api/auth/signup', (req, res) => {
   try {
     console.log('Signup request received:', req.body);
