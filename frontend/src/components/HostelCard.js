@@ -1,13 +1,27 @@
 import React from 'react';
 
+const amenityIcons = {
+  wifi: { icon: '📶', label: 'WiFi' },
+  ac: { icon: '❄️', label: 'AC' },
+  mess: { icon: '🍽️', label: 'Meals' },
+  laundry: { icon: '🧺', label: 'Laundry' },
+  parking: { icon: '🚗', label: 'Parking' },
+  cctv: { icon: '📹', label: 'CCTV' },
+  powerBackup: { icon: '🔋', label: 'Power backup' },
+  gym: { icon: '🏋️‍♂️', label: 'Gym' },
+  rooftop: { icon: '🌇', label: 'Terrace' }
+};
+
 const HostelCard = ({ hostel, onClick }) => {
   const {
+    _id,
     id,
     name,
     brand,
     city,
     area,
     monthlyRent,
+    securityDeposit,
     genderPreference,
     roomType,
     rating,
@@ -15,128 +29,155 @@ const HostelCard = ({ hostel, onClick }) => {
     images,
     amenities,
     isVerified,
+    totalRooms,
     availableRooms
   } = hostel;
 
-  const getAmenityIcon = (amenity, available) => {
-    const icons = {
-      wifi: '📶',
-      ac: '❄️',
-      mess: '🍽️',
-      laundry: '👕',
-      parking: '🚗',
-      cctv: '📹',
-      powerBackup: '🔋',
-      gym: '💪',
-      rooftop: '🏢'
-    };
-    
-    return available ? icons[amenity] : null;
+  const hostelId = _id || id;
+  const safeImage = images?.[0] || 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=1200&q=80';
+  const deposit = securityDeposit || (monthlyRent ? monthlyRent * 2 : null);
+  const availabilityPercent = totalRooms ? Math.round((availableRooms / totalRooms) * 100) : null;
+
+  const activeAmenities = Object.entries(amenityIcons)
+    .filter(([key]) => amenities?.[key])
+    .slice(0, 5);
+
+  const handleCardClick = () => {
+    if (onClick) {
+      onClick(hostelId);
+    }
   };
 
-  const getGenderBadgeColor = (gender) => {
-    switch (gender) {
-      case 'MALE': return 'bg-blue-100 text-blue-800';
-      case 'FEMALE': return 'bg-pink-100 text-pink-800';
-      case 'MIXED': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleCardClick();
     }
   };
 
   return (
-    <div 
-      className="card cursor-pointer group animate-fade-in"
-      onClick={() => onClick(id)}
+    <article
+      onClick={handleCardClick}
+      onKeyDown={handleKeyDown}
+      className="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-2xl focus-within:ring-2 focus-within:ring-indigo-500"
+      tabIndex={0}
+      role="button"
     >
-      {/* Image */}
-      <div className="relative">
+      <div className="relative h-56 overflow-hidden">
         <img
-          src={images?.[0] || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800'}
+          src={safeImage}
           alt={name}
-          className="w-full h-48 object-cover rounded-t-xl"
+          className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+          onError={(e) => {
+            e.target.src = 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=1200&q=80';
+          }}
         />
-        
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex gap-2">
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
+
+        <div className="absolute top-4 left-4 flex flex-wrap gap-2">
           {isVerified && (
-            <span className="bg-green-500 text-white text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1">
-              ✓ Verified
+            <span className="rounded-full bg-emerald-500/90 px-3 py-1 text-xs font-semibold text-white">
+              Verified by RoomRadar
             </span>
           )}
-          {availableRooms <= 5 && (
-            <span className="bg-red-500 text-white text-xs font-medium px-2 py-1 rounded-full">
-              Only {availableRooms} left
+          {brand && (
+            <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-800 backdrop-blur">
+              {brand}
             </span>
           )}
         </div>
 
-        {/* Brand */}
-        {brand && (
-          <div className="absolute top-3 right-3">
-            <span className="bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-medium px-2 py-1 rounded-full">
-              {brand}
-            </span>
+        {rating && (
+          <div className="absolute bottom-4 right-4 rounded-full bg-white/90 px-4 py-1.5 text-sm font-semibold text-slate-900 shadow-lg">
+            ⭐ {rating}{reviewCount ? ` · ${reviewCount} reviews` : ''}
           </div>
         )}
       </div>
 
-      {/* Content */}
-      <div className="p-4">
-        {/* Header */}
-        <div className="flex justify-between items-start mb-2">
+      <div className="flex flex-1 flex-col gap-4 p-6">
+        <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="font-semibold text-gray-900 text-lg group-hover:text-primary-600 transition-colors">
-              {name}
-            </h3>
-            <p className="text-gray-600 text-sm">{area}, {city}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-indigo-500">{city}</p>
+            <h3 className="mt-1 text-lg font-semibold text-slate-900">{name}</h3>
+            <p className="text-sm text-slate-500">{area}</p>
           </div>
-          
-          {rating && (
-            <div className="flex items-center gap-1">
-              <span className="text-yellow-400">★</span>
-              <span className="font-medium text-gray-900">{rating}</span>
-              <span className="text-gray-500 text-sm">({reviewCount})</span>
-            </div>
+          <div className="text-right">
+            {monthlyRent ? (
+              <>
+                <p className="text-2xl font-semibold text-slate-900">
+                  ₹{monthlyRent.toLocaleString()}
+                  <span className="text-sm font-normal text-slate-500"> /mo</span>
+                </p>
+                {deposit && (
+                  <p className="text-xs text-slate-500">Deposit ₹{deposit.toLocaleString()}</p>
+                )}
+              </>
+            ) : (
+              <p className="text-base font-semibold text-slate-900">Contact for pricing</p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2 text-xs font-semibold">
+          <span className={`rounded-full px-3 py-1 ${
+            genderPreference === 'MIXED'
+              ? 'bg-emerald-50 text-emerald-700'
+              : genderPreference === 'MALE'
+                ? 'bg-blue-50 text-blue-700'
+                : 'bg-rose-50 text-rose-700'
+          }`}>
+            {genderPreference === 'MIXED' ? 'Co-ed' : genderPreference}
+          </span>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">
+            {roomType === 'SINGLE' ? 'Private room' : roomType === 'SHARED' ? 'Twin sharing' : 'Dormitory'}
+          </span>
+          {availableRooms !== undefined && (
+            <span className="rounded-full bg-amber-50 px-3 py-1 text-amber-700">
+              {availableRooms} rooms open
+            </span>
           )}
         </div>
 
-        {/* Tags */}
-        <div className="flex gap-2 mb-3">
-          <span className={`text-xs font-medium px-2 py-1 rounded-full ${getGenderBadgeColor(genderPreference)}`}>
-            {genderPreference === 'MIXED' ? 'Co-ed' : genderPreference.toLowerCase()}
-          </span>
-          <span className="bg-gray-100 text-gray-700 text-xs font-medium px-2 py-1 rounded-full">
-            {roomType === 'SINGLE' ? 'Private' : 'Shared'} Room
-          </span>
-        </div>
-
-        {/* Amenities */}
-        <div className="flex gap-2 mb-4 flex-wrap">
-          {Object.entries(amenities || {}).map(([key, value]) => {
-            const icon = getAmenityIcon(key, value);
-            return icon ? (
-              <span key={key} className="text-sm" title={key}>
-                {icon}
-              </span>
-            ) : null;
-          })}
-        </div>
-
-        {/* Price */}
-        <div className="flex justify-between items-center">
+        {availabilityPercent !== null && (
           <div>
-            <span className="text-2xl font-bold text-gray-900">
-              ₹{monthlyRent?.toLocaleString()}
-            </span>
-            <span className="text-gray-500 text-sm ml-1">/month</span>
+            <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-1">
+              <span>Availability</span>
+              <span>{availabilityPercent}% beds open</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-indigo-500"
+                style={{ width: `${availabilityPercent}%` }}
+              />
+            </div>
           </div>
-          
-          <button className="btn-primary text-sm py-2 px-4">
-            View Details
-          </button>
+        )}
+
+        {activeAmenities.length > 0 && (
+          <div className="flex flex-wrap gap-3 text-sm text-slate-500">
+            {activeAmenities.map(([key, { icon, label }]) => (
+              <span key={key} className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                <span>{icon}</span>
+                {label}
+              </span>
+            ))}
+            {Object.keys(amenities || {}).filter((key) => amenities[key]).length > activeAmenities.length && (
+              <span className="text-xs font-semibold text-indigo-500">+ more</span>
+            )}
+          </div>
+        )}
+
+        <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-4">
+          <div>
+            <p className="text-xs text-slate-500">Instant virtual tour + booking</p>
+            <p className="text-sm font-semibold text-slate-900">Click to see full brief</p>
+          </div>
+          <div className="text-indigo-600 font-semibold group-hover:translate-x-1 transition">
+            View details →
+          </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 };
 

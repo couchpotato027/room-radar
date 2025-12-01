@@ -1,7 +1,5 @@
 const config = {
-  API_URL: 'https://room-radar-7t3y.onrender.com'
+  API_URL: process.env.REACT_APP_API_URL || 'http://localhost:3001'
 };
-
-// Always use production URL for deployment
 
 export default config;

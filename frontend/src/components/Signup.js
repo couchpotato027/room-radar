@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import config from '../config';
+import Logo from './Logo';
 
-const Signup = ({ onLogin, switchToLogin }) => {
+const Signup = ({ onLogin }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -14,8 +17,8 @@ const Signup = ({ onLogin, switchToLogin }) => {
     
     try {
       const response = await axios.post(`${config.API_URL}/api/auth/signup`, formData);
-      localStorage.setItem('token', response.data.token);
-      onLogin(response.data.user);
+      onLogin(response.data.user, response.data.token);
+      navigate('/');
     } catch (error) {
       setError(error.response?.data?.error || 'Signup failed');
     } finally {
@@ -24,72 +27,71 @@ const Signup = ({ onLogin, switchToLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
+      <div className="w-full max-w-md relative z-10 animate-fade-in">
         {/* Header */}
-        <div className="text-center">
-          <div className="mx-auto w-16 h-16 bg-primary-600 rounded-xl flex items-center justify-center mb-4">
-            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-            </svg>
+        <div className="text-center mb-10">
+          <div className="flex items-center justify-center mx-auto mb-6">
+            <Logo size="xl" className="bg-white/20 backdrop-blur-lg border border-white/30 shadow-lg" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">Join RoomRadar</h2>
-          <p className="mt-2 text-gray-600">Create your account and start exploring</p>
+          <h1 className="text-4xl font-extrabold text-white mb-2">
+            Join RoomRadar
+          </h1>
+          <p className="text-white/80 text-lg">
+            Create your account and start exploring
+          </p>
         </div>
 
-        {/* Form */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                Full name
+        {/* Form Card */}
+        <div className="bg-white/95 backdrop-blur-lg rounded-3xl p-8 md:p-10 shadow-2xl border border-white/20 mb-6">
+          <form onSubmit={handleSubmit}>
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Full Name
               </label>
               <input
-                id="name"
                 type="text"
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="input-field"
+                className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
                 placeholder="Enter your full name"
               />
             </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email address
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Email Address
               </label>
               <input
-                id="email"
                 type="email"
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="input-field"
+                className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
                 placeholder="Enter your email"
               />
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Password
               </label>
               <input
-                id="password"
                 type="password"
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="input-field"
+                className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
                 placeholder="Create a strong password"
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="text-gray-500 text-xs mt-1">
                 Must be at least 8 characters long
               </p>
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
                 <p className="text-red-600 text-sm">{error}</p>
               </div>
             )}
@@ -97,41 +99,53 @@ const Signup = ({ onLogin, switchToLogin }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full btn-primary py-3 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loading ? (
-                <div className="flex items-center justify-center">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                <div className="flex items-center justify-center gap-3">
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   Creating account...
                 </div>
               ) : (
-                'Create account'
+                'Create Account'
               )}
             </button>
           </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
-              Already have an account?{' '}
-              <button
-                onClick={switchToLogin}
-                className="font-medium text-primary-600 hover:text-primary-500 transition-colors"
-              >
-                Sign in
-              </button>
-            </p>
-          </div>
         </div>
 
         {/* Benefits */}
-        <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4">
-          <h3 className="font-medium text-gray-900 mb-2">Why join RoomRadar?</h3>
-          <ul className="text-sm text-gray-600 space-y-1">
-            <li>✓ Access to verified hostels across India</li>
-            <li>✓ Transparent pricing with no hidden fees</li>
-            <li>✓ Real reviews from genuine residents</li>
-            <li>✓ Easy booking and expense management</li>
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
+          <h3 className="text-white font-semibold text-base mb-4">
+            Why join RoomRadar?
+          </h3>
+          <ul className="text-white/90 text-sm space-y-2">
+            <li className="flex items-center gap-2">
+              <span>✓</span>
+              <span>Access to verified hostels across India</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <span>✓</span>
+              <span>Transparent pricing with no hidden fees</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <span>✓</span>
+              <span>Real reviews from genuine residents</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <span>✓</span>
+              <span>Easy booking and expense management</span>
+            </li>
           </ul>
+        </div>
+
+        {/* Switch to Login */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 text-center">
+          <p className="text-white/90 text-sm">
+            Already have an account?{' '}
+            <Link to="/login" className="text-white font-semibold underline hover:text-white/80">
+              Sign In
+            </Link>
+          </p>
         </div>
       </div>
     </div>

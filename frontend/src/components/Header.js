@@ -1,65 +1,101 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import Logo from './Logo';
 
 const Header = ({ user, onLogout }) => {
+  const location = useLocation();
+  
+  const isActive = (path) => {
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(path);
+  };
+
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <div className="flex items-center">
-            <div className="flex-shrink-0 flex items-center">
-              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center mr-3">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                </svg>
-              </div>
-              <h1 className="text-xl font-bold text-gray-900">RoomRadar</h1>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            <a href="#" className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium transition-colors">
-              Find Hostels
-            </a>
-            <a href="#" className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium transition-colors">
-              List Property
-            </a>
-            <a href="#" className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium transition-colors">
-              Help
-            </a>
+          <Link to="/" className="flex items-center space-x-3 group">
+            <Logo />
+            <h1 className="text-2xl font-extrabold text-gray-900 group-hover:text-indigo-600 transition-colors">RoomRadar</h1>
+          </Link>
+          
+          <nav className="hidden md:flex items-center space-x-6">
+            <Link 
+              to="/" 
+              className={`font-medium transition-colors ${
+                isActive('/') && location.pathname === '/'
+                  ? 'text-indigo-600 font-semibold'
+                  : 'text-gray-700 hover:text-indigo-600'
+              }`}
+            >
+              Browse Hostels
+            </Link>
+            <Link 
+              to="/list-hostel" 
+              className={`transition-colors ${
+                isActive('/list-hostel')
+                  ? 'text-indigo-600 font-semibold'
+                  : 'text-gray-700 hover:text-indigo-600 font-medium'
+              }`}
+            >
+              List Your Hostel
+            </Link>
+            {user && (
+              <>
+                <Link 
+                  to="/dashboard" 
+                  className={`font-medium transition-colors ${
+                    isActive('/dashboard')
+                      ? 'text-indigo-600 font-semibold'
+                      : 'text-gray-700 hover:text-indigo-600'
+                  }`}
+                >
+                  My Bookings
+                </Link>
+                {user.role === 'OWNER' && (
+                  <Link 
+                    to="/owner/dashboard" 
+                    className={`font-medium transition-colors ${
+                      isActive('/owner/dashboard')
+                        ? 'text-indigo-600 font-semibold'
+                        : 'text-gray-700 hover:text-indigo-600'
+                    }`}
+                  >
+                    Owner Dashboard
+                  </Link>
+                )}
+              </>
+            )}
           </nav>
 
-          {/* User Menu */}
-          {user ? (
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                  <span className="text-primary-600 font-medium text-sm">
-                    {user.name?.charAt(0)?.toUpperCase()}
-                  </span>
-                </div>
-                <span className="text-sm font-medium text-gray-700 hidden sm:block">
-                  {user.name}
-                </span>
-              </div>
-              <button
-                onClick={onLogout}
-                className="text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors"
+          <div className="flex items-center space-x-3">
+            {user ? (
+              <>
+                <Link
+                  to="/list-hostel"
+                  className="md:hidden px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg font-semibold"
+                >
+                  List Hostel
+                </Link>
+                <span className="text-sm text-gray-600 hidden sm:inline">Hi, {user.name}</span>
+                <button
+                  onClick={onLogout}
+                  className="px-4 py-2 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-colors"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
               >
-                Sign out
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center space-x-4">
-              <button className="text-gray-700 hover:text-primary-600 text-sm font-medium transition-colors">
-                Sign in
-              </button>
-              <button className="btn-primary">
-                Sign up
-              </button>
-            </div>
-          )}
+                Sign In
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </header>
