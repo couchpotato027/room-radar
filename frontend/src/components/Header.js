@@ -18,7 +18,7 @@ const Header = ({ user, onLogout }) => {
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center space-x-3 group">
             <Logo />
-            <h1 className="text-2xl font-extrabold text-gray-900 group-hover:text-indigo-600 transition-colors">RoomRadar</h1>
+            <h1 className="text-2xl font-extrabold text-gray-900 group-hover:text-blue-600 transition-colors">RoomRadar</h1>
           </Link>
           
           <nav className="hidden md:flex items-center space-x-6">
@@ -88,12 +88,12 @@ const Header = ({ user, onLogout }) => {
                 </button>
               </>
             ) : (
-              <Link
-                to="/login"
-                className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
-              >
-                Sign In
-              </Link>
+                <Link
+                  to="/login"
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-teal-700 transition-colors shadow-md"
+                >
+                  Sign In
+                </Link>
             )}
           </div>
         </div>

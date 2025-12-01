@@ -27,25 +27,31 @@ const Signup = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-teal-500 rounded-full blur-3xl"></div>
+      </div>
+
       <div className="w-full max-w-md relative z-10 animate-fade-in">
         {/* Header */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-8">
           <div className="flex items-center justify-center mx-auto mb-6">
-            <Logo size="xl" className="bg-white/20 backdrop-blur-lg border border-white/30 shadow-lg" />
+            <Logo size="xl" className="bg-white shadow-xl" />
           </div>
-          <h1 className="text-4xl font-extrabold text-white mb-2">
+          <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">
             Join RoomRadar
           </h1>
-          <p className="text-white/80 text-lg">
+          <p className="text-slate-300 text-base font-medium">
             Create your account and start exploring
           </p>
         </div>
 
         {/* Form Card */}
-        <div className="bg-white/95 backdrop-blur-lg rounded-3xl p-8 md:p-10 shadow-2xl border border-white/20 mb-6">
-          <form onSubmit={handleSubmit}>
-            <div className="mb-6">
+        <div className="bg-white rounded-2xl p-8 md:p-10 shadow-2xl mb-6 border border-gray-100">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Full Name
               </label>
@@ -54,12 +60,12 @@ const Signup = ({ onLogin }) => {
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
-                placeholder="Enter your full name"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-400"
+                placeholder="John Doe"
               />
             </div>
 
-            <div className="mb-6">
+            <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Email Address
               </label>
@@ -68,12 +74,12 @@ const Signup = ({ onLogin }) => {
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
-                placeholder="Enter your email"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-400"
+                placeholder="you@example.com"
               />
             </div>
 
-            <div className="mb-6">
+            <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Password
               </label>
@@ -82,29 +88,35 @@ const Signup = ({ onLogin }) => {
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
-                placeholder="Create a strong password"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-400"
+                placeholder="••••••••"
               />
-              <p className="text-gray-500 text-xs mt-1">
+              <p className="text-gray-500 text-xs mt-2 flex items-center gap-1">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 Must be at least 8 characters long
               </p>
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
-                <p className="text-red-600 text-sm">{error}</p>
+              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 flex items-center gap-3">
+                <svg className="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-red-600 text-sm font-medium">{error}</p>
               </div>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-blue-600 to-teal-600 text-white py-3.5 rounded-xl font-bold text-base hover:from-blue-700 hover:to-teal-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-3">
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  Creating account...
+                  <span>Creating account...</span>
                 </div>
               ) : (
                 'Create Account'
@@ -113,36 +125,47 @@ const Signup = ({ onLogin }) => {
           </form>
         </div>
 
-        {/* Benefits */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
-          <h3 className="text-white font-semibold text-base mb-4">
+        {/* Benefits Card */}
+        <div className="bg-white/5 backdrop-blur-md rounded-xl p-6 mb-6 border border-white/10">
+          <h3 className="text-white font-semibold text-base mb-4 flex items-center gap-2">
+            <svg className="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
             Why join RoomRadar?
           </h3>
-          <ul className="text-white/90 text-sm space-y-2">
-            <li className="flex items-center gap-2">
-              <span>✓</span>
+          <ul className="text-slate-300 text-sm space-y-3">
+            <li className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-teal-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
               <span>Access to verified hostels across India</span>
             </li>
-            <li className="flex items-center gap-2">
-              <span>✓</span>
+            <li className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-teal-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
               <span>Transparent pricing with no hidden fees</span>
             </li>
-            <li className="flex items-center gap-2">
-              <span>✓</span>
+            <li className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-teal-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
               <span>Real reviews from genuine residents</span>
             </li>
-            <li className="flex items-center gap-2">
-              <span>✓</span>
+            <li className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-teal-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
               <span>Easy booking and expense management</span>
             </li>
           </ul>
         </div>
 
         {/* Switch to Login */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 text-center">
-          <p className="text-white/90 text-sm">
+        <div className="bg-white/5 backdrop-blur-md rounded-xl p-5 border border-white/10 text-center">
+          <p className="text-slate-300 text-sm">
             Already have an account?{' '}
-            <Link to="/login" className="text-white font-semibold underline hover:text-white/80">
+            <Link to="/login" className="text-white font-semibold hover:text-teal-300 transition-colors underline decoration-2 underline-offset-2">
               Sign In
             </Link>
           </p>
