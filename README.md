@@ -2,6 +2,26 @@
 
 **Finding reliable hostels and mess services made simple, transparent, and trustworthy.**
 
+## ✅ Evaluation Requirements Checklist
+
+### Backend Functionality ✅
+- ✅ **2+ CREATE Operations**: Create Booking, Create Hostel
+- ✅ **2+ READ Operations**: Get User Bookings, Get Hostel Bookings, Get Hostels (with filters), Get Single Hostel
+- ✅ **2+ UPDATE Operations**: Cancel Booking, Update Booking Status, Update Hostel
+- ✅ **2+ DELETE Operations**: Delete Booking, Delete Hostel
+
+### Backend API Features ✅
+- ✅ **Pagination**: Server-side pagination implemented (`GET /api/hostels?page=1&limit=12`)
+- ✅ **Searching**: Text search implemented (`GET /api/hostels?search=keyword`)
+- ✅ **Sorting**: Sort by price, rating, reviewCount (`GET /api/hostels?sortBy=price&sortOrder=asc`)
+- ✅ **Filtering**: Filter by city, area, price range, gender, room type (all backend API calls)
+
+### Hosting & Documentation ✅
+- ✅ **Frontend URL**: https://room-radar-frontend.netlify.app
+- ✅ **Backend URL**: https://room-radar-backend.onrender.com
+- ✅ **Problem Statement**: Clearly defined in README.md
+- ✅ **API Documentation**: Complete endpoint documentation included
+
 ## 🧠 Problem Statement
 
 Students and working professionals struggle to find trustworthy accommodation options. Existing sources are scattered, unverified, and lack transparency in pricing and quality.
@@ -76,11 +96,22 @@ Students and working professionals struggle to find trustworthy accommodation op
 ### Hostels
 | Endpoint | Method | Description | Access |
 |----------|--------|-------------|--------|
-| `/api/hostels` | GET | Get hostels with filters | Authenticated |
+| `/api/hostels` | GET | Get hostels with filters, pagination, sorting | Authenticated |
 | `/api/hostels/:id` | GET | Get specific hostel | Authenticated |
+| `/api/hostels/owner` | GET | Get owner's hostels | Owner |
 | `/api/hostels` | POST | Create hostel listing | Owner/Admin |
 | `/api/hostels/:id` | PUT | Update hostel info | Owner/Admin |
-| `/api/hostels/:id` | DELETE | Delete hostel | Admin |
+| `/api/hostels/:id` | DELETE | Delete hostel (soft delete) | Owner/Admin |
+
+### Bookings
+| Endpoint | Method | Description | Access |
+|----------|--------|-------------|--------|
+| `/api/bookings` | POST | Create new booking | Authenticated |
+| `/api/bookings/user` | GET | Get user's bookings | Authenticated |
+| `/api/bookings/hostel/:id` | GET | Get hostel bookings | Owner |
+| `/api/bookings/cancel/:id` | PUT | Cancel booking | Authenticated |
+| `/api/bookings/:id/status` | PUT | Update booking status | Owner |
+| `/api/bookings/:id` | DELETE | Delete booking | Authenticated |
 
 ### Reviews
 | Endpoint | Method | Description | Access |
@@ -206,15 +237,40 @@ PORT=3001
 
 ## 🚀 Deployment
 
-### Production URLs
-- **Frontend**: https://room-radar-frontend.netlify.app
-- **Backend**: https://room-radar-backend.onrender.com
-- **Database**: Aiven MySQL Cloud
+### 🌐 Production URLs (Live & Accessible)
+
+**Frontend (Netlify):**  
+🔗 **https://room-radar-frontend.netlify.app**
+
+**Backend API (Render):**  
+🔗 **https://room-radar-backend.onrender.com**
+
+**API Base URL:** `https://room-radar-backend.onrender.com/api`
+
+**Database:** MongoDB Atlas / Aiven MySQL Cloud
 
 ### Deployment Process
-1. **Database**: Aiven MySQL service
-2. **Backend**: Render with environment variables
-3. **Frontend**: Netlify with build optimization
+1. **Database**: MongoDB Atlas / Aiven MySQL service configured
+2. **Backend**: Render with environment variables (`MONGODB_URI`, `JWT_SECRET`, `PORT`)
+3. **Frontend**: Netlify with build optimization and environment variables
+
+### ✅ Hosting Verification Instructions
+
+**To verify backend API calls:**
+1. Open the hosted frontend: https://room-radar-frontend.netlify.app
+2. Open browser Developer Tools (F12)
+3. Go to **Network** tab → Filter by **Fetch/XHR**
+4. Perform actions (login, search, filter, create booking)
+5. Verify all API calls are made to: `https://room-radar-backend.onrender.com/api/*`
+6. Check API responses in the Network tab to confirm backend functionality
+
+**To verify database entries:**
+1. Connect to MongoDB Atlas / Aiven database
+2. Verify that entries are created/updated when you:
+   - Create a booking (check `bookings` collection)
+   - Create a hostel (check `hostels` collection)
+   - Update hostel info (check `hostels` collection updates)
+   - Cancel booking (check booking status updates)
 
 ## 📈 Future Enhancements
 
@@ -260,4 +316,4 @@ For support and queries:
 
 ---
 
-**RoomRadar** - Making accommodation discovery simple, transparent, and trustworthy! 🏠✨
+**RoomRadar** - Making accommodation discovery simple, transparent, and trustworthy! 🏠✨# Force redeploy Mon Dec  1 15:47:27 IST 2025

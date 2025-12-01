@@ -112,5 +112,67 @@ router.get('/owner', auth, async (req, res) => {
   }
 });
 
+// Update hostel (for owners)
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id;
+    const hostel = await Hostel.findById(req.params.id);
+    
+    if (!hostel) {
+      return res.status(404).json({ error: 'Hostel not found' });
+    }
+    
+    // Verify user is owner of this hostel
+    if (hostel.ownerId.toString() !== userId.toString() && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Unauthorized. Only the owner can update this hostel.' });
+    }
+    
+    // Update hostel fields
+    const allowedUpdates = [
+      'name', 'city', 'area', 'address', 'monthlyRent', 'securityDeposit',
+      'genderPreference', 'roomType', 'totalRooms', 'availableRooms',
+      'description', 'images', 'amenities', 'nearbyPlaces', 'landmark', 'metroStation'
+    ];
+    
+    allowedUpdates.forEach(field => {
+      if (req.body[field] !== undefined) {
+        hostel[field] = req.body[field];
+      }
+    });
+    
+    await hostel.save();
+    res.json(hostel);
+  } catch (error) {
+    console.error('Error updating hostel:', error);
+    res.status(500).json({ error: 'Server error: ' + error.message });
+  }
+});
+
+// Delete hostel (for owners/admins)
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id;
+    const hostel = await Hostel.findById(req.params.id);
+    
+    if (!hostel) {
+      return res.status(404).json({ error: 'Hostel not found' });
+    }
+    
+    // Verify user is owner of this hostel or is admin
+    if (hostel.ownerId.toString() !== userId.toString() && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Unauthorized. Only the owner or admin can delete this hostel.' });
+    }
+    
+    // Soft delete by setting isActive to false (better practice)
+    hostel.isActive = false;
+    await hostel.save();
+    
+    res.json({ message: 'Hostel deleted successfully', hostel });
+  } catch (error) {
+    console.error('Error deleting hostel:', error);
+    res.status(500).json({ error: 'Server error: ' + error.message });
+  }
+});
+
 module.exports = router;
 

@@ -170,5 +170,39 @@ router.put('/:id/status', auth, async (req, res) => {
   }
 });
 
+// Delete booking (hard delete - only for users or cancelled bookings)
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+    
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    const userId = req.user._id || req.user.id;
+    
+    // Verify user owns this booking or is admin
+    if (booking.userId.toString() !== userId.toString() && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Unauthorized. Only the booking owner can delete this booking.' });
+    }
+    
+    // Only allow deletion of cancelled bookings or allow users to delete their own bookings
+    // Restore hostel availability if booking was active
+    if (booking.bookingStatus !== 'CANCELLED' && booking.bookingStatus !== 'COMPLETED') {
+      await Hostel.findByIdAndUpdate(booking.hostelId, {
+        $inc: { availableRooms: 1 }
+      });
+    }
+    
+    // Delete the booking
+    await Booking.findByIdAndDelete(req.params.id);
+    
+    res.json({ message: 'Booking deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting booking:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;
 
