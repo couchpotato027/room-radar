@@ -2,16 +2,15 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
-const connectDB = require('./config/db');
-const Hostel = require('./models/Hostel');
-const User = require('./models/User');
+const bcrypt = require('bcryptjs');
+const { connectDB, prisma } = require('./config/db');
 const bookingRoutes = require('./routes/bookings');
 const hostelRoutes = require('./routes/hostels');
 const auth = require('./middleware/auth');
 
 const app = express();
 
-// Connect to MongoDB
+// Connect to Database
 connectDB();
 
 // CORS middleware
@@ -19,12 +18,19 @@ app.use((req, res, next) => {
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',
-    'https://room-radar-frontend.netlify.app'
-  ];
+    'https://room-radar-frontend.netlify.app',
+    'https://room-radar-wheat.vercel.app',
+    process.env.FRONTEND_URL
+  ].filter(Boolean); // Remove undefined values
   
   const origin = req.headers.origin;
+  
+  // Allow requests from allowed origins or if no origin (like Postman)
   if (allowedOrigins.includes(origin) || !origin) {
     res.header('Access-Control-Allow-Origin', origin || '*');
+  } else if (process.env.NODE_ENV === 'development') {
+    // In development, allow all origins
+    res.header('Access-Control-Allow-Origin', '*');
   }
   
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
@@ -81,22 +87,29 @@ app.post('/api/auth/signup', async (req, res) => {
     }
     
     // Check if user exists
-    const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
+    const existingUser = await prisma.user.findUnique({
+      where: { email: email.toLowerCase().trim() }
+    });
     if (existingUser) {
       return res.status(400).json({ error: 'User with this email already exists. Please login instead.' });
     }
 
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     // Create user
-    const user = await User.create({
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
-      password: password,
-      role: role.toUpperCase()
+    const user = await prisma.user.create({
+      data: {
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
+        password: hashedPassword,
+        role: role.toUpperCase()
+      }
     });
 
     // Generate JWT token with user ID
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      { id: user.id, email: user.email },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '30d' }
     );
@@ -104,8 +117,8 @@ app.post('/api/auth/signup', async (req, res) => {
     res.status(201).json({
       token,
       user: {
-        id: user._id,
-        _id: user._id,
+        id: user.id,
+        _id: user.id,
         name: user.name,
         email: user.email,
         role: user.role
@@ -114,15 +127,9 @@ app.post('/api/auth/signup', async (req, res) => {
   } catch (error) {
     console.error('Signup error:', error);
     
-    // Handle duplicate email error (MongoDB unique constraint)
-    if (error.code === 11000) {
+    // Handle duplicate email error (Prisma unique constraint)
+    if (error.code === 'P2002') {
       return res.status(400).json({ error: 'User with this email already exists. Please login instead.' });
-    }
-    
-    // Handle validation errors
-    if (error.name === 'ValidationError') {
-      const errorMessage = Object.values(error.errors).map(e => e.message).join(', ');
-      return res.status(400).json({ error: errorMessage });
     }
     
     // Generic server error
@@ -138,19 +145,25 @@ app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
     
     // Find user
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() }
+    });
+    
     if (!user) {
       // For demo, create a user if doesn't exist
-      const newUser = await User.create({
-        name: email.split('@')[0],
-        email: email.toLowerCase(),
-        password: password || 'password123',
-        role: 'USER'
+      const hashedPassword = await bcrypt.hash(password || 'password123', 10);
+      const newUser = await prisma.user.create({
+        data: {
+          name: email.split('@')[0],
+          email: email.toLowerCase(),
+          password: hashedPassword,
+          role: 'USER'
+        }
       });
       
       // Generate JWT token with user ID
       const token = jwt.sign(
-        { id: newUser._id, email: newUser.email },
+        { id: newUser.id, email: newUser.email },
         process.env.JWT_SECRET || 'your-secret-key',
         { expiresIn: '30d' }
       );
@@ -158,8 +171,8 @@ app.post('/api/auth/login', async (req, res) => {
       return res.json({
         token,
         user: {
-          id: newUser._id,
-          _id: newUser._id,
+          id: newUser.id,
+          _id: newUser.id,
           name: newUser.name,
           email: newUser.email,
           role: newUser.role
@@ -168,14 +181,14 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     // Check password
-    const isMatch = await user.comparePassword(password || 'password123');
+    const isMatch = await bcrypt.compare(password || 'password123', user.password);
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     // Generate JWT token with user ID
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      { id: user.id, email: user.email },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '30d' }
     );
@@ -183,8 +196,8 @@ app.post('/api/auth/login', async (req, res) => {
     res.json({
       token,
       user: {
-        id: user._id,
-        _id: user._id,
+        id: user.id,
+        _id: user.id,
         name: user.name,
         email: user.email,
         role: user.role
@@ -199,13 +212,25 @@ app.post('/api/auth/login', async (req, res) => {
 // Get cities and areas
 app.get('/api/locations', async (req, res) => {
   try {
-    const cities = await Hostel.distinct('city');
+    const hostels = await prisma.hostel.findMany({
+      where: { isActive: true },
+      select: { city: true, area: true }
+    });
+    
     const locations = {};
-
-    for (const city of cities) {
-      const areas = await Hostel.distinct('area', { city });
-      locations[city] = areas;
-    }
+    const citySet = new Set();
+    
+    hostels.forEach(hostel => {
+      if (hostel.city) {
+        citySet.add(hostel.city);
+        if (!locations[hostel.city]) {
+          locations[hostel.city] = [];
+        }
+        if (hostel.area && !locations[hostel.city].includes(hostel.area)) {
+          locations[hostel.city].push(hostel.area);
+        }
+      }
+    });
 
     res.json(locations);
   } catch (error) {
@@ -231,72 +256,105 @@ app.get('/api/hostels', async (req, res) => {
       limit = 12
     } = req.query;
 
-    // Build query
-    const query = { isActive: true };
+    // Build where clause
+    const where = { isActive: true };
 
-    // Text search
+    // Text search (MySQL search)
     if (search) {
-      query.$text = { $search: search };
+      where.OR = [
+        { name: { contains: search } },
+        { city: { contains: search } },
+        { area: { contains: search } },
+        { description: { contains: search } }
+      ];
     }
 
     // City filter
     if (city && city !== 'All Cities') {
-      query.city = new RegExp(city, 'i');
+      where.city = city;
     }
 
     // Area filter
     if (area) {
-      query.area = new RegExp(area, 'i');
+      where.area = area;
     }
 
     // Price filter
     if (minPrice || maxPrice) {
-      query.monthlyRent = {};
-      if (minPrice) query.monthlyRent.$gte = parseInt(minPrice);
-      if (maxPrice) query.monthlyRent.$lte = parseInt(maxPrice);
+      where.monthlyRent = {};
+      if (minPrice) where.monthlyRent.gte = parseInt(minPrice);
+      if (maxPrice) where.monthlyRent.lte = parseInt(maxPrice);
     }
 
     // Gender preference
     if (genderPreference) {
-      query.genderPreference = genderPreference;
+      where.genderPreference = genderPreference;
     }
 
     // Room type
     if (roomType) {
-      query.roomType = roomType;
+      where.roomType = roomType;
     }
 
     // Build sort options
-    const sortOptions = {};
+    const orderBy = {};
     if (sortBy === 'price' || sortBy === 'monthlyRent') {
-      sortOptions.monthlyRent = sortOrder === 'desc' ? -1 : 1;
+      orderBy.monthlyRent = sortOrder === 'desc' ? 'desc' : 'asc';
     } else if (sortBy === 'rating') {
-      sortOptions.rating = sortOrder === 'desc' ? -1 : 1;
+      orderBy.rating = sortOrder === 'desc' ? 'desc' : 'asc';
     } else if (sortBy === 'reviewCount') {
-      sortOptions.reviewCount = sortOrder === 'desc' ? -1 : 1;
+      orderBy.reviewCount = sortOrder === 'desc' ? 'desc' : 'asc';
     } else {
-      sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
-    }
-
-    // If text search, add text score
-    if (search) {
-      sortOptions.score = { $meta: 'textScore' };
+      orderBy[sortBy] = sortOrder === 'desc' ? 'desc' : 'asc';
     }
 
     // Execute query with pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
     const [hostels, total] = await Promise.all([
-      Hostel.find(query)
-        .sort(sortOptions)
-        .skip(skip)
-        .limit(parseInt(limit))
-        .lean(),
-      Hostel.countDocuments(query)
+      prisma.hostel.findMany({
+        where,
+        orderBy,
+        skip,
+        take: parseInt(limit),
+        include: {
+          images: true,
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          }
+        }
+      }),
+      prisma.hostel.count({ where })
     ]);
 
+    // Transform hostels to match expected format
+    const transformedHostels = hostels.map(hostel => ({
+      ...hostel,
+      _id: hostel.id,
+      images: hostel.images.map(img => img.url),
+      coordinates: hostel.latitude && hostel.longitude ? {
+        lat: hostel.latitude,
+        lng: hostel.longitude
+      } : undefined,
+      amenities: {
+        wifi: hostel.wifi,
+        ac: hostel.ac,
+        mess: hostel.mess,
+        laundry: hostel.laundry,
+        parking: hostel.parking,
+        cctv: hostel.cctv,
+        powerBackup: hostel.powerBackup,
+        gym: hostel.gym,
+        rooftop: hostel.rooftop
+      }
+    }));
+
     res.json({
-      hostels,
+      hostels: transformedHostels,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -313,13 +371,63 @@ app.get('/api/hostels', async (req, res) => {
 // Get single hostel
 app.get('/api/hostels/:id', async (req, res) => {
   try {
-    const hostel = await Hostel.findById(req.params.id).lean();
+    const hostelId = parseInt(req.params.id);
+    if (isNaN(hostelId)) {
+      return res.status(400).json({ error: 'Invalid hostel ID' });
+    }
+
+    const hostel = await prisma.hostel.findUnique({
+      where: { id: hostelId },
+      include: {
+        images: true,
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true
+          }
+        },
+        reviews: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          }
+        }
+      }
+    });
     
     if (!hostel) {
       return res.status(404).json({ error: 'Hostel not found' });
     }
 
-    res.json(hostel);
+    // Transform to match expected format
+    const transformedHostel = {
+      ...hostel,
+      _id: hostel.id,
+      images: hostel.images.map(img => img.url),
+      coordinates: hostel.latitude && hostel.longitude ? {
+        lat: hostel.latitude,
+        lng: hostel.longitude
+      } : undefined,
+      amenities: {
+        wifi: hostel.wifi,
+        ac: hostel.ac,
+        mess: hostel.mess,
+        laundry: hostel.laundry,
+        parking: hostel.parking,
+        cctv: hostel.cctv,
+        powerBackup: hostel.powerBackup,
+        gym: hostel.gym,
+        rooftop: hostel.rooftop
+      }
+    };
+
+    res.json(transformedHostel);
   } catch (error) {
     console.error('Error fetching hostel:', error);
     res.status(500).json({ error: 'Server error' });

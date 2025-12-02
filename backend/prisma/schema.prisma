@@ -27,13 +27,17 @@ model User {
 model Hostel {
   id          Int      @id @default(autoincrement())
   name        String
+  brand       String?
   description String   @db.Text
   address     String
   city        String
-  state       String
-  pincode     String
+  area        String?
+  state       String?
+  pincode     String?
   latitude    Float?
   longitude   Float?
+  landmark    String?
+  metroStation String?
   
   // Pricing
   monthlyRent Int
@@ -45,6 +49,10 @@ model Hostel {
   mess        Boolean  @default(false)
   laundry     Boolean  @default(false)
   parking     Boolean  @default(false)
+  cctv        Boolean  @default(false)
+  powerBackup Boolean  @default(false)
+  gym         Boolean  @default(false)
+  rooftop     Boolean  @default(false)
   
   // Preferences
   genderPreference GenderType @default(MIXED)
@@ -55,6 +63,9 @@ model Hostel {
   isActive    Boolean  @default(true)
   totalRooms  Int
   availableRooms Int
+  rating      Float    @default(0)
+  reviewCount Int      @default(0)
+  nearbyPlaces Json?   // Array of strings
   
   // Relations
   ownerId     Int
@@ -92,9 +103,12 @@ model Review {
 
 model Booking {
   id          Int      @id @default(autoincrement())
-  checkIn     DateTime
+  checkinDate DateTime
   checkOut    DateTime?
-  status      BookingStatus @default(PENDING)
+  bookingStatus BookingStatus @default(PENDING)
+  roomType    RoomType?
+  price       Int?
+  duration    Int?     // in months
   totalAmount Int
   
   // Relations

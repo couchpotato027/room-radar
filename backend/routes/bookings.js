@@ -1,9 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
-const Booking = require('../models/Booking');
-const Hostel = require('../models/Hostel');
-const User = require('../models/User');
+const { prisma } = require('../config/db');
+const bcrypt = require('bcryptjs');
 const auth = require('../middleware/auth');
 
 // Create booking
@@ -14,20 +12,28 @@ router.post('/', auth, async (req, res) => {
     
     if (!userId || userId === 'demo-user-id') {
       // For demo users, create or find a user
-      let user = await User.findOne({ email: 'demo@roomradar.com' });
+      let user = await prisma.user.findUnique({ where: { email: 'demo@roomradar.com' } });
       if (!user) {
-        user = await User.create({
-          name: 'Demo User',
-          email: 'demo@roomradar.com',
-          password: 'demo123',
-          role: 'USER'
+        const hashedPassword = await bcrypt.hash('demo123', 10);
+        user = await prisma.user.create({
+          data: {
+            name: 'Demo User',
+            email: 'demo@roomradar.com',
+            password: hashedPassword,
+            role: 'USER'
+          }
         });
       }
-      userId = user._id;
+      userId = user.id;
+    } else {
+      userId = parseInt(userId);
     }
 
     // Get hostel details
-    const hostel = await Hostel.findById(hostelId);
+    const hostelIdInt = parseInt(hostelId);
+    const hostel = await prisma.hostel.findUnique({
+      where: { id: hostelIdInt }
+    });
     if (!hostel) {
       return res.status(404).json({ error: 'Hostel not found' });
     }
@@ -42,25 +48,62 @@ router.post('/', auth, async (req, res) => {
     const totalAmount = price * duration;
 
     // Create booking
-    const booking = await Booking.create({
-      userId,
-      hostelId,
-      roomType,
-      price,
-      duration,
-      checkinDate: new Date(checkinDate),
-      totalAmount
+    const booking = await prisma.booking.create({
+      data: {
+        userId,
+        hostelId: hostelIdInt,
+        roomType,
+        price,
+        duration,
+        checkinDate: new Date(checkinDate),
+        totalAmount
+      },
+      include: {
+        hostel: {
+          select: {
+            id: true,
+            name: true,
+            city: true,
+            area: true,
+            monthlyRent: true,
+            images: true
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
     });
 
     // Update hostel availability
-    await Hostel.findByIdAndUpdate(hostelId, {
-      $inc: { availableRooms: -1 }
+    await prisma.hostel.update({
+      where: { id: hostelIdInt },
+      data: {
+        availableRooms: { decrement: 1 }
+      }
     });
 
-    await booking.populate('hostelId', 'name city area images monthlyRent');
-    await booking.populate('userId', 'name email');
+    // Transform booking to match expected format
+    const transformedBooking = {
+      ...booking,
+      _id: booking.id,
+      hostelId: {
+        ...booking.hostel,
+        _id: booking.hostel.id,
+        images: booking.hostel.images.map(img => img.url)
+      },
+      userId: booking.userId, // Keep as integer for easier comparison
+      user: {
+        ...booking.user,
+        _id: booking.user.id
+      }
+    };
 
-    res.status(201).json(booking);
+    res.status(201).json(transformedBooking);
   } catch (error) {
     console.error('Booking creation error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -70,24 +113,125 @@ router.post('/', auth, async (req, res) => {
 // Get user bookings
 router.get('/user', auth, async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id;
+    let userId = req.user._id || req.user.id;
     
     if (!userId) {
       return res.status(401).json({ error: 'User ID not found' });
     }
     
-    // Query bookings for this specific user only
-    // MongoDB automatically handles ObjectId comparison - use userId directly
-    const bookings = await Booking.find({ userId: userId })
-      .populate('hostelId', 'name city area images monthlyRent')
-      .sort({ createdAt: -1 });
+    userId = parseInt(userId);
     
-    // Log for debugging (can remove later)
+    // Query bookings for this specific user only
+    const bookings = await prisma.booking.findMany({
+      where: { userId },
+      include: {
+        hostel: {
+          select: {
+            id: true,
+            name: true,
+            city: true,
+            area: true,
+            monthlyRent: true,
+            images: true
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    
+    // Transform bookings to match expected format
+    const transformedBookings = bookings.map(booking => ({
+      ...booking,
+      _id: booking.id,
+      hostelId: {
+        ...booking.hostel,
+        _id: booking.hostel.id,
+        images: booking.hostel.images.map(img => img.url)
+      },
+      userId: booking.userId, // Keep as integer for easier comparison
+      user: {
+        ...booking.user,
+        _id: booking.user.id
+      }
+    }));
+    
     console.log(`Fetched ${bookings.length} bookings for user ${userId}`);
     
-    res.json(bookings);
+    res.json(transformedBookings);
   } catch (error) {
     console.error('Error fetching user bookings:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get single booking by ID (must be after /user and /hostel routes)
+router.get('/single/:id', auth, async (req, res) => {
+  try {
+    const bookingId = parseInt(req.params.id);
+    if (isNaN(bookingId)) {
+      return res.status(400).json({ error: 'Invalid booking ID' });
+    }
+
+    const userId = parseInt(req.user._id || req.user.id);
+    
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        hostel: {
+          select: {
+            id: true,
+            name: true,
+            city: true,
+            area: true,
+            monthlyRent: true,
+            images: true
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    // Verify user owns this booking
+    if (booking.userId !== userId && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    // Transform booking to match expected format
+    const transformedBooking = {
+      ...booking,
+      _id: booking.id,
+      hostelId: {
+        ...booking.hostel,
+        _id: booking.hostel.id,
+        images: booking.hostel.images.map(img => img.url)
+      },
+      userId: booking.userId, // Keep as integer for easier comparison
+      user: {
+        ...booking.user,
+        _id: booking.user.id
+      }
+    };
+
+    res.json(transformedBooking);
+  } catch (error) {
+    console.error('Error fetching booking:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -96,17 +240,43 @@ router.get('/user', auth, async (req, res) => {
 router.get('/hostel/:id', auth, async (req, res) => {
   try {
     // Verify user is owner of this hostel
-    const userId = req.user._id || req.user.id;
-    const hostel = await Hostel.findById(req.params.id);
-    if (!hostel || hostel.ownerId.toString() !== userId.toString()) {
+    const userId = parseInt(req.user._id || req.user.id);
+    const hostelId = parseInt(req.params.id);
+    
+    const hostel = await prisma.hostel.findUnique({
+      where: { id: hostelId }
+    });
+    
+    if (!hostel || hostel.ownerId !== userId) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
-    const bookings = await Booking.find({ hostelId: req.params.id })
-      .populate('userId', 'name email phone')
-      .sort({ createdAt: -1 });
+    const bookings = await prisma.booking.findMany({
+      where: { hostelId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
     
-    res.json(bookings);
+    // Transform bookings
+    const transformedBookings = bookings.map(booking => ({
+      ...booking,
+      _id: booking.id,
+      userId: {
+        ...booking.user,
+        _id: booking.user.id
+      }
+    }));
+    
+    res.json(transformedBookings);
   } catch (error) {
     console.error('Error fetching hostel bookings:', error);
     res.status(500).json({ error: 'Server error' });
@@ -116,28 +286,38 @@ router.get('/hostel/:id', auth, async (req, res) => {
 // Cancel booking
 router.put('/cancel/:id', auth, async (req, res) => {
   try {
-    const booking = await Booking.findById(req.params.id);
+    const bookingId = parseInt(req.params.id);
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId }
+    });
     
     if (!booking) {
       return res.status(404).json({ error: 'Booking not found' });
     }
 
     // Verify user owns this booking
-    const userId = req.user._id || req.user.id;
-    if (booking.userId.toString() !== userId.toString()) {
+    const userId = parseInt(req.user._id || req.user.id);
+    if (booking.userId !== userId) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
     // Update booking status
-    booking.bookingStatus = 'CANCELLED';
-    await booking.save();
-
-    // Restore hostel availability
-    await Hostel.findByIdAndUpdate(booking.hostelId, {
-      $inc: { availableRooms: 1 }
+    const updatedBooking = await prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        bookingStatus: 'CANCELLED'
+      }
     });
 
-    res.json(booking);
+    // Restore hostel availability
+    await prisma.hostel.update({
+      where: { id: booking.hostelId },
+      data: {
+        availableRooms: { increment: 1 }
+      }
+    });
+
+    res.json({ ...updatedBooking, _id: updatedBooking.id });
   } catch (error) {
     console.error('Error cancelling booking:', error);
     res.status(500).json({ error: 'Server error' });
@@ -148,22 +328,33 @@ router.put('/cancel/:id', auth, async (req, res) => {
 router.put('/:id/status', auth, async (req, res) => {
   try {
     const { status } = req.body;
-    const booking = await Booking.findById(req.params.id).populate('hostelId');
+    const bookingId = parseInt(req.params.id);
+    
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        hostel: true
+      }
+    });
     
     if (!booking) {
       return res.status(404).json({ error: 'Booking not found' });
     }
 
     // Verify user is owner of the hostel
-    const userId = req.user._id || req.user.id;
-    if (booking.hostelId.ownerId.toString() !== userId.toString()) {
+    const userId = parseInt(req.user._id || req.user.id);
+    if (booking.hostel.ownerId !== userId) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
-    booking.bookingStatus = status;
-    await booking.save();
+    const updatedBooking = await prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        bookingStatus: status
+      }
+    });
 
-    res.json(booking);
+    res.json({ ...updatedBooking, _id: updatedBooking.id });
   } catch (error) {
     console.error('Error updating booking status:', error);
     res.status(500).json({ error: 'Server error' });
@@ -173,29 +364,37 @@ router.put('/:id/status', auth, async (req, res) => {
 // Delete booking (hard delete - only for users or cancelled bookings)
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const booking = await Booking.findById(req.params.id);
+    const bookingId = parseInt(req.params.id);
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId }
+    });
     
     if (!booking) {
       return res.status(404).json({ error: 'Booking not found' });
     }
 
-    const userId = req.user._id || req.user.id;
+    const userId = parseInt(req.user._id || req.user.id);
     
     // Verify user owns this booking or is admin
-    if (booking.userId.toString() !== userId.toString() && req.user.role !== 'ADMIN') {
+    if (booking.userId !== userId && req.user.role !== 'ADMIN') {
       return res.status(403).json({ error: 'Unauthorized. Only the booking owner can delete this booking.' });
     }
     
     // Only allow deletion of cancelled bookings or allow users to delete their own bookings
     // Restore hostel availability if booking was active
     if (booking.bookingStatus !== 'CANCELLED' && booking.bookingStatus !== 'COMPLETED') {
-      await Hostel.findByIdAndUpdate(booking.hostelId, {
-        $inc: { availableRooms: 1 }
+      await prisma.hostel.update({
+        where: { id: booking.hostelId },
+        data: {
+          availableRooms: { increment: 1 }
+        }
       });
     }
     
     // Delete the booking
-    await Booking.findByIdAndDelete(req.params.id);
+    await prisma.booking.delete({
+      where: { id: bookingId }
+    });
     
     res.json({ message: 'Booking deleted successfully' });
   } catch (error) {
@@ -205,4 +404,3 @@ router.delete('/:id', auth, async (req, res) => {
 });
 
 module.exports = router;
-

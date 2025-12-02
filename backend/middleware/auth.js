@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const { prisma } = require('../config/db');
 
 const auth = async (req, res, next) => {
   try {
@@ -15,9 +15,11 @@ const auth = async (req, res, next) => {
     if (token === 'demo-token-123') {
       // Try to get user from database or use demo user
       try {
-        const user = await User.findOne({ email: 'demo@roomradar.com' });
+        const user = await prisma.user.findUnique({
+          where: { email: 'demo@roomradar.com' }
+        });
         if (user) {
-          req.user = user;
+          req.user = { ...user, _id: user.id };
           return next();
         }
       } catch (e) {
@@ -35,13 +37,15 @@ const auth = async (req, res, next) => {
         return res.status(401).json({ error: 'Invalid token: missing user ID' });
       }
       
-      const user = await User.findById(userId);
+      const user = await prisma.user.findUnique({
+        where: { id: parseInt(userId) }
+      });
       
       if (!user) {
         return res.status(401).json({ error: 'User not found' });
       }
 
-      req.user = user;
+      req.user = { ...user, _id: user.id };
       next();
     } catch (error) {
       console.error('JWT verification error:', error.message);
@@ -53,4 +57,3 @@ const auth = async (req, res, next) => {
 };
 
 module.exports = auth;
-

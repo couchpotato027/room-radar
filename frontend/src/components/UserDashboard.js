@@ -37,13 +37,33 @@ const UserDashboard = ({ user, onLogout }) => {
       const bookings = response.data || [];
       
       // Filter bookings to ensure they belong to current user
+      // Handle both object and direct ID formats
       const userBookings = bookings.filter(booking => {
-        const bookingUserId = booking.userId?.toString();
-        const currentUserId = userId?.toString();
-        return bookingUserId === currentUserId;
+        // Get booking user ID - could be direct number/string or nested in object
+        let bookingUserId = booking.userId;
+        if (typeof bookingUserId === 'object' && bookingUserId !== null) {
+          bookingUserId = bookingUserId._id || bookingUserId.id;
+        }
+        
+        // Convert both to strings for comparison
+        const bookingUserIdStr = String(bookingUserId);
+        const currentUserIdStr = String(userId);
+        
+        const matches = bookingUserIdStr === currentUserIdStr;
+        if (!matches) {
+          console.log('Booking filtered out:', {
+            bookingId: booking._id || booking.id,
+            bookingUserId: bookingUserId,
+            currentUserId: userId,
+            bookingUserIdType: typeof bookingUserId,
+            currentUserIdType: typeof userId
+          });
+        }
+        return matches;
       });
       
       console.log(`Received ${bookings.length} bookings, filtered to ${userBookings.length} for user ${userId}`);
+      console.log('Sample booking userId:', bookings[0]?.userId, 'Type:', typeof bookings[0]?.userId);
       
       setBookings(userBookings);
     } catch (error) {
@@ -247,7 +267,7 @@ const UserDashboard = ({ user, onLogout }) => {
                         </div>
                         <div>
                           <span className="text-xs text-gray-500 uppercase tracking-wide font-medium block mb-1">Booking ID</span>
-                          <p className="font-mono font-bold text-gray-900 text-lg">#{booking._id.slice(-8).toUpperCase()}</p>
+                          <p className="font-mono font-bold text-gray-900 text-lg">#{String(booking._id || booking.id).padStart(8, '0')}</p>
                         </div>
                         <div>
                           <span className="text-xs text-gray-500 uppercase tracking-wide font-medium block mb-1">Total Amount</span>

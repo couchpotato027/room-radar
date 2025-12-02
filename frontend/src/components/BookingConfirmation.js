@@ -18,18 +18,45 @@ const BookingConfirmation = ({ user, onLogout }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
+      
+      // Try direct endpoint first (more efficient)
+      try {
+        const response = await axios.get(`${config.API_URL}/api/bookings/single/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        setBooking(response.data);
+        return;
+      } catch (directError) {
+        // If direct endpoint fails, fall back to fetching all bookings
+        console.log('Direct endpoint failed, trying user bookings list...');
+      }
+      
+      // Fallback: fetch all user bookings and find the one
       const response = await axios.get(`${config.API_URL}/api/bookings/user`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
       
-      const foundBooking = response.data.find(b => b._id === id);
+      // Convert id from URL to number for comparison (MySQL uses integer IDs)
+      const bookingId = parseInt(id);
+      const foundBooking = response.data.find(b => {
+        const bookingIdValue = b._id || b.id;
+        return bookingIdValue === bookingId || String(bookingIdValue) === String(id);
+      });
+      
       if (foundBooking) {
         setBooking(foundBooking);
+      } else {
+        console.error('Booking not found. ID:', id, 'Available bookings:', response.data.map(b => ({ id: b.id, _id: b._id })));
       }
     } catch (error) {
       console.error('Error fetching booking:', error);
+      if (error.response?.status === 404) {
+        console.error('Booking not found with ID:', id);
+      }
     } finally {
       setLoading(false);
     }
@@ -86,7 +113,7 @@ const BookingConfirmation = ({ user, onLogout }) => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Booking ID</span>
-                <span className="font-semibold text-gray-900">#{booking._id.slice(-8).toUpperCase()}</span>
+                <span className="font-semibold text-gray-900">#{String(booking._id || booking.id).padStart(8, '0')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Hostel</span>
