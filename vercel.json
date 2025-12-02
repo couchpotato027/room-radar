@@ -1,8 +1,7 @@
 {
-  "buildCommand": "cd room-radar/frontend && npm install && npm run build",
-  "outputDirectory": "room-radar/frontend/build",
-  "devCommand": "cd room-radar/frontend && npm start",
-  "installCommand": "cd room-radar/frontend && npm install",
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/build",
+  "installCommand": "cd frontend && npm install",
   "framework": "create-react-app",
   "rewrites": [
     {
