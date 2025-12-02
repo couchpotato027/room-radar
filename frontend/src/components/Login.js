@@ -20,7 +20,14 @@ const Login = ({ onLogin }) => {
       onLogin(response.data.user, response.data.token);
       navigate('/');
     } catch (error) {
-      setError(error.response?.data?.error || 'Login failed');
+      console.error('Login error:', error);
+      if (error.response?.data?.error) {
+        setError(error.response.data.error);
+      } else if (error.message === 'Network Error' || error.code === 'ERR_NETWORK' || !error.response) {
+        setError('Unable to connect to server. Please ensure the backend server is running on port 3001.');
+      } else {
+        setError('Login failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
