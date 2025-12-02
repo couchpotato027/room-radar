@@ -2,17 +2,10 @@ services:
   - type: web
     name: room-radar-backend
     env: node
-    buildCommand: npm install && npx prisma generate
+    buildCommand: npm install
     startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
-      - key: DATABASE_URL
-        sync: false  # Set this manually in Render dashboard
-      - key: JWT_SECRET
-        sync: false  # Set this manually in Render dashboard
-      - key: FRONTEND_URL
-        sync: false  # Set this after deploying frontend
-
