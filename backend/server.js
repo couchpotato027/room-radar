@@ -15,13 +15,10 @@ connectDB();
 
 // CORS Configuration
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://room-radar-wheat.vercel.app', 'https://room-radar-git-main-priyansh-s-projects-eb60a61d.vercel.app'],
-  credentials: true,
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
-app.options('*', cors());
 
 app.use(express.json());
 
