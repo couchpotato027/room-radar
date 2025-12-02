@@ -13,16 +13,18 @@ const app = express();
 // Connect to Database
 connectDB();
 
+// CORS Configuration
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://room-radar-wheat.vercel.app',
+  'https://room-radar-git-main-priyansh-s-projects-eb60a61d.vercel.app',
+  'https://room-radar-44ghhywse-priyansh-s-projects-eb60a61d.vercel.app',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
 // CORS middleware
 app.use((req, res, next) => {
-  const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'https://room-radar-frontend.netlify.app',
-    'https://room-radar-wheat.vercel.app',
-    process.env.FRONTEND_URL
-  ].filter(Boolean); // Remove undefined values
-  
   const origin = req.headers.origin;
   
   // Allow requests from allowed origins or if no origin (like Postman)
@@ -33,13 +35,18 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
   }
   
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Content-Length');
   res.header('Access-Control-Allow-Credentials', 'true');
   
+  // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
+    return res.status(200).json({
+      status: 200,
+      message: 'CORS preflight successful'
+    });
   }
+  
   next();
 });
 
