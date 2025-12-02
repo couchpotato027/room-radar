@@ -440,7 +440,7 @@ app.use('/api/bookings', bookingRoutes);
 // Hostel management routes
 app.use('/api/hostels', hostelRoutes);
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
