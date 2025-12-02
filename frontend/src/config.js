@@ -12,7 +12,7 @@ const getApiUrl = () => {
   
   // If in production, use production backend
   if (isProduction) {
-    return 'https://room-radar-backend.onrender.com';
+    return 'https://room-radar-7t3y.onrender.com';
   }
   
   // Otherwise, use local backend for development
