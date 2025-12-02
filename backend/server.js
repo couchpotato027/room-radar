@@ -49,18 +49,39 @@ app.post('/api/auth/signup', async (req, res) => {
   try {
     const { name, email, password, role = 'USER' } = req.body;
     
+    // Validate required fields
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'All fields are required (name, email, password)' });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Please provide a valid email address' });
+    }
+
+    // Validate password length
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+
+    // Validate name
+    if (name.trim().length < 2) {
+      return res.status(400).json({ error: 'Name must be at least 2 characters long' });
+    }
+    
     // Check if user exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
     if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
+      return res.status(400).json({ error: 'User with this email already exists. Please login instead.' });
     }
 
     // Create user
     const user = await User.create({
-      name,
-      email: email.toLowerCase(),
-      password,
-      role
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      password: password,
+      role: role.toUpperCase()
     });
 
     // Generate JWT token with user ID
@@ -82,7 +103,23 @@ app.post('/api/auth/signup', async (req, res) => {
     });
   } catch (error) {
     console.error('Signup error:', error);
-    res.status(500).json({ error: 'Server error: ' + error.message });
+    
+    // Handle duplicate email error (MongoDB unique constraint)
+    if (error.code === 11000) {
+      return res.status(400).json({ error: 'User with this email already exists. Please login instead.' });
+    }
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const errorMessage = Object.values(error.errors).map(e => e.message).join(', ');
+      return res.status(400).json({ error: errorMessage });
+    }
+    
+    // Generic server error
+    res.status(500).json({ 
+      error: 'Failed to create account. Please try again later.',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 

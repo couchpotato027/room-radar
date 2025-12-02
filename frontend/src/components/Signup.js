@@ -10,17 +10,62 @@ const Signup = ({ onLogin }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const validateForm = () => {
+    // Validate name
+    if (!formData.name || formData.name.trim().length < 2) {
+      setError('Name must be at least 2 characters long');
+      return false;
+    }
+
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email || !emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+
+    // Validate password
+    if (!formData.password || formData.password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
     
+    // Client-side validation
+    if (!validateForm()) {
+      return;
+    }
+    
+    setLoading(true);
+    
     try {
-      const response = await axios.post(`${config.API_URL}/api/auth/signup`, formData);
-      onLogin(response.data.user, response.data.token);
-      navigate('/');
+      const response = await axios.post(`${config.API_URL}/api/auth/signup`, {
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password
+      });
+      
+      if (response.data && response.data.token && response.data.user) {
+        onLogin(response.data.user, response.data.token);
+        navigate('/');
+      } else {
+        setError('Invalid response from server. Please try again.');
+      }
     } catch (error) {
-      setError(error.response?.data?.error || 'Signup failed');
+      console.error('Signup error:', error);
+      if (error.response?.data?.error) {
+        setError(error.response.data.error);
+      } else if (error.message === 'Network Error' || error.code === 'ERR_NETWORK') {
+        setError('Unable to connect to server. Please check your internet connection and try again.');
+      } else {
+        setError('Signup failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
