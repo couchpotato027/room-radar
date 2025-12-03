@@ -14,8 +14,8 @@ const app = express();
 // Push Prisma schema to database on startup (if needed)
 const pushPrismaSchema = async () => {
   try {
-    // Check if User table exists
-    await prisma.$queryRaw`SELECT 1 FROM User LIMIT 1`;
+    // Check if User table exists (PostgreSQL uses quoted identifiers)
+    await prisma.$queryRaw`SELECT 1 FROM "User" LIMIT 1`;
     console.log('✅ Database schema exists');
   } catch (error) {
     // Table doesn't exist, push schema
