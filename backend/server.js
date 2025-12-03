@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const { execSync } = require('child_process');
 const { connectDB, prisma } = require('./config/db');
 const bookingRoutes = require('./routes/bookings');
 const hostelRoutes = require('./routes/hostels');
@@ -10,8 +11,33 @@ const auth = require('./middleware/auth');
 
 const app = express();
 
-// Connect to Database
-connectDB();
+// Push Prisma schema to database on startup (if needed)
+const pushPrismaSchema = async () => {
+  try {
+    // Check if User table exists
+    await prisma.$queryRaw`SELECT 1 FROM User LIMIT 1`;
+    console.log('Database schema already exists');
+  } catch (error) {
+    // Table doesn't exist, push schema
+    console.log('Pushing Prisma schema to database...');
+    try {
+      execSync('npx prisma db push --accept-data-loss', { 
+        stdio: 'inherit',
+        cwd: __dirname 
+      });
+      console.log('✅ Prisma schema pushed successfully');
+    } catch (pushError) {
+      console.error('❌ Failed to push Prisma schema:', pushError.message);
+      // Don't exit - let the server start and show the error in logs
+    }
+  }
+};
+
+// Connect to Database and push schema if needed
+(async () => {
+  await connectDB();
+  await pushPrismaSchema();
+})();
 
 // CORS Configuration
 app.use(cors({
