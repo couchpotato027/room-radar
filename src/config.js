@@ -1,21 +1,16 @@
 // Determine API URL based on environment
 const getApiUrl = () => {
-  // If environment variable is set, use it (highest priority)
-  if (process.env.REACT_APP_API_URL) {
-    return process.env.REACT_APP_API_URL;
-  }
-  
-  // Check if we're in production (Vercel, Netlify, etc.)
+  // HARDCODED: Always use correct backend URL in production
   const isProduction = window.location.hostname !== 'localhost' && 
                        window.location.hostname !== '127.0.0.1' &&
                        !window.location.hostname.includes('localhost');
   
-  // If in production, use production backend
   if (isProduction) {
+    // Force correct backend URL
     return 'https://room-radar-7t3y.onrender.com';
   }
   
-  // Otherwise, use local backend for development
+  // Development: use local backend
   return 'http://localhost:3001';
 };
 
