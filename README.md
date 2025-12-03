@@ -1,72 +1,172 @@
-# Getting Started with Create React App
+# 🏠 Room Radar
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern platform for discovering and booking hostels and co-living spaces in India.
 
-## Available Scripts
+## 🌟 Features
 
-In the project directory, you can run:
+- **Browse Hostels**: Search and filter hostels by city, area, price, gender preference, and room type
+- **User Authentication**: Secure signup and login with JWT
+- **Booking System**: Book hostels with confirmation and tracking
+- **Owner Dashboard**: List and manage your hostels
+- **User Dashboard**: View and manage your bookings
+- **Admin API**: View registered users and system statistics
 
-### `npm start`
+## 🏗️ Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Frontend
+- React.js
+- Tailwind CSS
+- Axios for API calls
+- React Router for navigation
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Backend
+- Node.js with Express
+- Prisma ORM
+- MySQL (Aiven)
+- JWT Authentication
+- bcryptjs for password hashing
 
 ### Deployment
+- **Frontend**: Vercel
+- **Backend**: Render
+- **Database**: Aiven MySQL
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## 📁 Project Structure
 
-### `npm run build` fails to minify
+```
+room-radar/
+├── backend/              # Backend API server
+│   ├── config/          # Database configuration
+│   ├── middleware/      # Auth middleware
+│   ├── routes/          # API routes
+│   ├── seed/           # Database seeding
+│   ├── prisma/         # Prisma schema
+│   └── server.js       # Main server file
+├── frontend/            # React frontend
+│   ├── src/
+│   │   ├── components/  # React components
+│   │   └── config.js   # API configuration
+│   └── public/
+├── vercel.json          # Vercel deployment config
+├── render.yaml         # Render deployment config
+└── README.md           # This file
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
-# Force Render redeploy - Wed Dec  3 05:25:04 IST 2025
-# Trigger redeploy
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- MySQL database (or Aiven account)
+- npm or yarn
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/couchpotato027/room-radar.git
+   cd room-radar
+   ```
+
+2. **Setup Backend**
+   ```bash
+   cd backend
+   npm install
+   cp .env.example .env  # Create .env file
+   # Add your DATABASE_URL and JWT_SECRET to .env
+   npx prisma generate
+   npx prisma db push
+   npm start
+   ```
+
+3. **Setup Frontend**
+   ```bash
+   cd frontend
+   npm install
+   npm start
+   ```
+
+4. **Seed Database (Optional)**
+   ```bash
+   cd backend
+   npm run seed
+   ```
+
+## 🔧 Environment Variables
+
+### Backend (.env)
+```
+DATABASE_URL=mysql://user:password@host:port/database
+JWT_SECRET=your-secret-key
+PORT=3001
+NODE_ENV=development
+FRONTEND_URL=http://localhost:3000
+```
+
+### Frontend
+```
+REACT_APP_API_URL=http://localhost:3001
+```
+
+## 📡 API Endpoints
+
+### Authentication
+- `POST /api/auth/signup` - Register new user
+- `POST /api/auth/login` - Login user
+
+### Hostels
+- `GET /api/hostels` - Get all hostels (with filters)
+- `GET /api/hostels/:id` - Get single hostel
+- `POST /api/hostels` - Create hostel (auth required)
+- `GET /api/locations` - Get cities and areas
+
+### Bookings
+- `GET /api/bookings` - Get user bookings (auth required)
+- `POST /api/bookings` - Create booking (auth required)
+- `GET /api/bookings/single/:id` - Get single booking
+
+### Admin
+- `GET /api/admin/users` - View all registered users
+
+## 🚀 Deployment
+
+### Backend (Render)
+1. Connect GitHub repository
+2. Set Root Directory: `backend`
+3. Build Command: `npm install && npx prisma generate`
+4. Start Command: `npm start`
+5. Add environment variables
+
+### Frontend (Vercel)
+1. Connect GitHub repository
+2. Set Root Directory: `frontend` (or configure in vercel.json)
+3. Add environment variable: `REACT_APP_API_URL`
+4. Deploy
+
+## 📝 Database Schema
+
+The database uses Prisma with MySQL. Key models:
+- **User**: Users and owners
+- **Hostel**: Hostel listings
+- **Booking**: User bookings
+- **Review**: Hostel reviews
+- **HostelImage**: Hostel images
+
+See `backend/prisma/schema.prisma` for full schema.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the ISC License.
+
+## 🔗 Live Links
+
+- **Frontend**: https://room-radar-wheat.vercel.app
+- **Backend**: https://room-radar-7t3y.onrender.com
+- **Admin API**: https://room-radar-7t3y.onrender.com/api/admin/users
