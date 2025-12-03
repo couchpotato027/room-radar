@@ -444,6 +444,70 @@ app.use('/api/bookings', bookingRoutes);
 // Hostel management routes
 app.use('/api/hostels', hostelRoutes);
 
+// Seed database endpoint (for initial setup)
+app.post('/api/seed', async (req, res) => {
+  try {
+    // Check if hostels already exist
+    const existingHostels = await prisma.hostel.count();
+    if (existingHostels > 0) {
+      return res.json({ 
+        message: 'Database already has data. Skipping seed.',
+        hostelsCount: existingHostels 
+      });
+    }
+
+    // Run seed script
+    const { execSync } = require('child_process');
+    execSync('node seed/seed.js', { 
+      stdio: 'inherit',
+      cwd: __dirname,
+      env: process.env
+    });
+    
+    res.json({ 
+      message: 'Database seeded successfully',
+      hostelsCount: await prisma.hostel.count()
+    });
+  } catch (error) {
+    console.error('Seed error:', error);
+    res.status(500).json({ 
+      error: 'Failed to seed database',
+      details: error.message 
+    });
+  }
+});
+
+// Auto-seed on startup if database is empty
+const autoSeed = async () => {
+  try {
+    const hostelsCount = await prisma.hostel.count();
+    if (hostelsCount === 0) {
+      console.log('⚠️  No hostels found. Seeding database...');
+      try {
+        const { execSync } = require('child_process');
+        execSync('node seed/seed.js', { 
+          stdio: 'inherit',
+          cwd: __dirname,
+          env: process.env
+        });
+        console.log('✅ Database seeded successfully');
+      } catch (seedError) {
+        console.error('❌ Failed to seed database:', seedError.message);
+        console.log('💡 You can manually seed by calling: POST /api/seed');
+      }
+    } else {
+      console.log(`✅ Database has ${hostelsCount} hostels`);
+    }
+  } catch (error) {
+    console.error('Error checking database:', error);
+  }
+};
+
+// Run auto-seed after schema push
+setTimeout(() => {
+  autoSeed();
+}, 5000); // Wait 5 seconds for schema to be pushed
+
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
