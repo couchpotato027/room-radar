@@ -32,40 +32,12 @@ const UserDashboard = ({ user, onLogout }) => {
         }
       });
       
-      // Verify bookings belong to current user (extra safety check)
-      const userId = currentUser?._id || currentUser?.id;
+      // Backend already filters by user ID from token, so we can trust the response
       const bookings = response.data || [];
       
-      // Filter bookings to ensure they belong to current user
-      // Handle both object and direct ID formats
-      const userBookings = bookings.filter(booking => {
-        // Get booking user ID - could be direct number/string or nested in object
-        let bookingUserId = booking.userId;
-        if (typeof bookingUserId === 'object' && bookingUserId !== null) {
-          bookingUserId = bookingUserId._id || bookingUserId.id;
-        }
-        
-        // Convert both to strings for comparison
-        const bookingUserIdStr = String(bookingUserId);
-        const currentUserIdStr = String(userId);
-        
-        const matches = bookingUserIdStr === currentUserIdStr;
-        if (!matches) {
-          console.log('Booking filtered out:', {
-            bookingId: booking._id || booking.id,
-            bookingUserId: bookingUserId,
-            currentUserId: userId,
-            bookingUserIdType: typeof bookingUserId,
-            currentUserIdType: typeof userId
-          });
-        }
-        return matches;
-      });
+      console.log(`Received ${bookings.length} bookings for user ${currentUser?._id || currentUser?.id}`);
       
-      console.log(`Received ${bookings.length} bookings, filtered to ${userBookings.length} for user ${userId}`);
-      console.log('Sample booking userId:', bookings[0]?.userId, 'Type:', typeof bookings[0]?.userId);
-      
-      setBookings(userBookings);
+      setBookings(bookings);
     } catch (error) {
       console.error('Error fetching bookings:', error);
       console.error('Error response:', error.response?.data);

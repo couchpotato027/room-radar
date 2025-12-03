@@ -113,13 +113,22 @@ router.post('/', auth, async (req, res) => {
 // Get user bookings
 router.get('/user', auth, async (req, res) => {
   try {
+    // Get user ID from authenticated request (from JWT token)
     let userId = req.user._id || req.user.id;
     
     if (!userId) {
+      console.error('User ID not found in request:', req.user);
       return res.status(401).json({ error: 'User ID not found' });
     }
     
     userId = parseInt(userId);
+    
+    if (isNaN(userId)) {
+      console.error('Invalid user ID:', req.user._id || req.user.id);
+      return res.status(401).json({ error: 'Invalid user ID' });
+    }
+    
+    console.log(`Fetching bookings for user ID: ${userId} (type: ${typeof userId})`);
     
     // Query bookings for this specific user only
     const bookings = await prisma.booking.findMany({
@@ -146,6 +155,8 @@ router.get('/user', auth, async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
     
+    console.log(`Found ${bookings.length} bookings in database for user ${userId}`);
+    
     // Transform bookings to match expected format
     const transformedBookings = bookings.map(booking => ({
       ...booking,
@@ -162,12 +173,12 @@ router.get('/user', auth, async (req, res) => {
       }
     }));
     
-    console.log(`Fetched ${bookings.length} bookings for user ${userId}`);
+    console.log(`Returning ${transformedBookings.length} bookings for user ${userId}`);
     
     res.json(transformedBookings);
   } catch (error) {
     console.error('Error fetching user bookings:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 });
 
