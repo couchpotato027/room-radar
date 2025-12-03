@@ -480,8 +480,8 @@ app.post('/api/seed', async (req, res) => {
       });
     }
     
-    // Insert hostels
-    for (const hostelData of hostels.slice(0, 50)) {
+    // Insert all hostels
+    for (const hostelData of hostels) {
       const { name, brand, city, area, address, monthlyRent, securityDeposit, genderPreference, roomType, totalRooms, availableRooms, isVerified, rating, reviewCount, images, amenities, description, nearbyPlaces, coordinates, landmark, metroStation } = hostelData;
       
       await prisma.hostel.create({
@@ -571,8 +571,8 @@ const autoSeed = async () => {
           });
         }
         
-        // Insert hostels (limit to first 20 for faster seeding)
-        for (const hostelData of hostels.slice(0, 20)) {
+        // Insert all hostels
+        for (const hostelData of hostels) {
           const { name, brand, city, area, address, monthlyRent, securityDeposit, genderPreference, roomType, totalRooms, availableRooms, isVerified, rating, reviewCount, images, amenities, description, nearbyPlaces, coordinates, landmark, metroStation } = hostelData;
           
           await seedPrisma.hostel.create({
@@ -616,7 +616,7 @@ const autoSeed = async () => {
         }
         
         await seedPrisma.$disconnect();
-        console.log(`✅ Database seeded successfully with ${Math.min(hostels.length, 20)} hostels`);
+        console.log(`✅ Database seeded successfully with ${hostels.length} hostels`);
       } catch (seedError) {
         console.error('❌ Failed to seed database:', seedError.message);
         console.log('💡 You can manually seed by calling: POST /api/seed');
