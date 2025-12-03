@@ -456,17 +456,78 @@ app.post('/api/seed', async (req, res) => {
       });
     }
 
-    // Run seed script
-    const { execSync } = require('child_process');
-    execSync('node seed/seed.js', { 
-      stdio: 'inherit',
-      cwd: __dirname,
-      env: process.env
-    });
+    // Import seed data
+    const bcrypt = require('bcryptjs');
+    const hostels = require('./seed/hostels');
     
+    // Clear existing data
+    await prisma.hostelImage.deleteMany({});
+    await prisma.booking.deleteMany({});
+    await prisma.review.deleteMany({});
+    await prisma.hostel.deleteMany({});
+    
+    // Create default owner
+    let owner = await prisma.user.findUnique({ where: { email: 'owner@roomradar.com' } });
+    if (!owner) {
+      const hashedPassword = await bcrypt.hash('password123', 10);
+      owner = await prisma.user.create({
+        data: {
+          name: 'Default Owner',
+          email: 'owner@roomradar.com',
+          password: hashedPassword,
+          role: 'OWNER'
+        }
+      });
+    }
+    
+    // Insert hostels
+    for (const hostelData of hostels.slice(0, 50)) {
+      const { name, brand, city, area, address, monthlyRent, securityDeposit, genderPreference, roomType, totalRooms, availableRooms, isVerified, rating, reviewCount, images, amenities, description, nearbyPlaces, coordinates, landmark, metroStation } = hostelData;
+      
+      await prisma.hostel.create({
+        data: {
+          name,
+          brand: brand || null,
+          city,
+          area: area || null,
+          address,
+          monthlyRent,
+          securityDeposit: securityDeposit || monthlyRent * 2,
+          genderPreference: genderPreference || 'MIXED',
+          roomType: roomType || 'SHARED',
+          totalRooms: totalRooms || 50,
+          availableRooms: availableRooms || totalRooms || 50,
+          isVerified: isVerified || false,
+          isActive: true,
+          rating: rating || 0,
+          reviewCount: reviewCount || 0,
+          description: description || `Comfortable accommodation in ${area || city}.`,
+          landmark: landmark || null,
+          metroStation: metroStation || null,
+          latitude: coordinates?.lat || null,
+          longitude: coordinates?.lng || null,
+          wifi: amenities?.wifi || false,
+          ac: amenities?.ac || false,
+          mess: amenities?.mess || false,
+          laundry: amenities?.laundry || false,
+          parking: amenities?.parking || false,
+          cctv: amenities?.cctv || false,
+          powerBackup: amenities?.powerBackup || false,
+          gym: amenities?.gym || false,
+          rooftop: amenities?.rooftop || false,
+          nearbyPlaces: nearbyPlaces || null,
+          ownerId: owner.id,
+          images: {
+            create: (images || []).map(url => ({ url }))
+          }
+        }
+      });
+    }
+    
+    const finalCount = await prisma.hostel.count();
     res.json({ 
       message: 'Database seeded successfully',
-      hostelsCount: await prisma.hostel.count()
+      hostelsCount: finalCount
     });
   } catch (error) {
     console.error('Seed error:', error);
@@ -484,13 +545,78 @@ const autoSeed = async () => {
     if (hostelsCount === 0) {
       console.log('⚠️  No hostels found. Seeding database...');
       try {
-        const { execSync } = require('child_process');
-        execSync('node seed/seed.js', { 
-          stdio: 'inherit',
-          cwd: __dirname,
-          env: process.env
-        });
-        console.log('✅ Database seeded successfully');
+        // Import and run seed directly (not via execSync to avoid process.exit)
+        const { PrismaClient } = require('@prisma/client');
+        const bcrypt = require('bcryptjs');
+        const hostels = require('./seed/hostels');
+        const seedPrisma = new PrismaClient();
+        
+        // Clear existing hostels
+        await seedPrisma.hostelImage.deleteMany({});
+        await seedPrisma.booking.deleteMany({});
+        await seedPrisma.review.deleteMany({});
+        await seedPrisma.hostel.deleteMany({});
+        
+        // Create default owner
+        let owner = await seedPrisma.user.findUnique({ where: { email: 'owner@roomradar.com' } });
+        if (!owner) {
+          const hashedPassword = await bcrypt.hash('password123', 10);
+          owner = await seedPrisma.user.create({
+            data: {
+              name: 'Default Owner',
+              email: 'owner@roomradar.com',
+              password: hashedPassword,
+              role: 'OWNER'
+            }
+          });
+        }
+        
+        // Insert hostels (limit to first 20 for faster seeding)
+        for (const hostelData of hostels.slice(0, 20)) {
+          const { name, brand, city, area, address, monthlyRent, securityDeposit, genderPreference, roomType, totalRooms, availableRooms, isVerified, rating, reviewCount, images, amenities, description, nearbyPlaces, coordinates, landmark, metroStation } = hostelData;
+          
+          await seedPrisma.hostel.create({
+            data: {
+              name,
+              brand: brand || null,
+              city,
+              area: area || null,
+              address,
+              monthlyRent,
+              securityDeposit: securityDeposit || monthlyRent * 2,
+              genderPreference: genderPreference || 'MIXED',
+              roomType: roomType || 'SHARED',
+              totalRooms: totalRooms || 50,
+              availableRooms: availableRooms || totalRooms || 50,
+              isVerified: isVerified || false,
+              isActive: true,
+              rating: rating || 0,
+              reviewCount: reviewCount || 0,
+              description: description || `Comfortable accommodation in ${area || city}.`,
+              landmark: landmark || null,
+              metroStation: metroStation || null,
+              latitude: coordinates?.lat || null,
+              longitude: coordinates?.lng || null,
+              wifi: amenities?.wifi || false,
+              ac: amenities?.ac || false,
+              mess: amenities?.mess || false,
+              laundry: amenities?.laundry || false,
+              parking: amenities?.parking || false,
+              cctv: amenities?.cctv || false,
+              powerBackup: amenities?.powerBackup || false,
+              gym: amenities?.gym || false,
+              rooftop: amenities?.rooftop || false,
+              nearbyPlaces: nearbyPlaces || null,
+              ownerId: owner.id,
+              images: {
+                create: (images || []).map(url => ({ url }))
+              }
+            }
+          });
+        }
+        
+        await seedPrisma.$disconnect();
+        console.log(`✅ Database seeded successfully with ${Math.min(hostels.length, 20)} hostels`);
       } catch (seedError) {
         console.error('❌ Failed to seed database:', seedError.message);
         console.log('💡 You can manually seed by calling: POST /api/seed');
