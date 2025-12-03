@@ -263,13 +263,13 @@ app.get('/api/hostels', async (req, res) => {
     // Build where clause
     const where = { isActive: true };
 
-    // Text search (MySQL search)
+    // Text search (PostgreSQL - case-insensitive)
     if (search) {
       where.OR = [
-        { name: { contains: search } },
-        { city: { contains: search } },
-        { area: { contains: search } },
-        { description: { contains: search } }
+        { name: { contains: search, mode: 'insensitive' } },
+        { city: { contains: search, mode: 'insensitive' } },
+        { area: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } }
       ];
     }
 
