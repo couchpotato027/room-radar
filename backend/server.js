@@ -16,19 +16,20 @@ const pushPrismaSchema = async () => {
   try {
     // Check if User table exists
     await prisma.$queryRaw`SELECT 1 FROM User LIMIT 1`;
-    console.log('Database schema already exists');
+    console.log('✅ Database schema exists');
   } catch (error) {
     // Table doesn't exist, push schema
-    console.log('Pushing Prisma schema to database...');
+    console.log('⚠️  User table not found. Pushing Prisma schema to database...');
     try {
       execSync('npx prisma db push --accept-data-loss', { 
         stdio: 'inherit',
-        cwd: __dirname 
+        cwd: __dirname,
+        env: process.env
       });
       console.log('✅ Prisma schema pushed successfully');
     } catch (pushError) {
       console.error('❌ Failed to push Prisma schema:', pushError.message);
-      // Don't exit - let the server start and show the error in logs
+      console.error('Please ensure DATABASE_URL is set correctly in Render environment variables');
     }
   }
 };
