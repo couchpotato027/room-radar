@@ -7,20 +7,24 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          900: '#1e3a8a',
+          50: '#f9fafb',
+          100: '#f3f4f6',
+          200: '#e5e7eb',
+          800: '#1f2937',
+          900: '#111827', // Charcoal / Black
+        },
+        secondary: {
+          50: '#fafaf9', // Stone 50
+          100: '#f5f5f4', // Stone 100
+          200: '#e7e5e4', // Stone 200
         },
         accent: {
-          500: '#f97316',
-          600: '#ea580c',
+          500: '#b45309', // Muted Gold/Bronze
+          600: '#92400e',
         }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Outfit', 'sans-serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

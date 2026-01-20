@@ -1,70 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import config from '../config';
+import React from 'react';
 import Header from './Header';
+import Button from './ui/Button';
 
 const OwnerDashboard = ({ user, onLogout }) => {
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedHostel, setSelectedHostel] = useState('');
-
-  useEffect(() => {
-    // In a real app, fetch owner's hostels and their bookings
-    // For now, we'll show a message
-    setLoading(false);
-  }, []);
-
-  const handleStatusUpdate = async (bookingId, status) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `${config.API_URL}/api/bookings/${bookingId}/status`,
-        { status },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-      // Refresh bookings
-    } catch (error) {
-      console.error('Error updating booking status:', error);
-      alert(error.response?.data?.error || 'Failed to update booking');
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-secondary-50">
       <Header user={user} onLogout={onLogout} />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Owner Dashboard</h1>
-          <p className="text-gray-600">Manage bookings for your hostels</p>
+
+      <main className="max-w-7xl mx-auto px-4 py-12">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-primary-900">Owner Dashboard</h1>
+          <Button variant="primary">Add New Property</Button>
         </div>
 
-        {loading ? (
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl p-6 border border-gray-200 animate-pulse">
-                <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            ))}
+        <div className="bg-white rounded-3xl p-16 text-center border border-secondary-200 shadow-sm">
+          <div className="w-24 h-24 bg-secondary-100 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">
+            🏠
           </div>
-        ) : (
-          <div className="bg-white rounded-2xl p-8 border border-gray-200">
-            <p className="text-gray-600 text-center">
-              Owner dashboard functionality will be available once you have hostels listed.
-              <br />
-              Bookings for your hostels will appear here.
-            </p>
+          <h2 className="text-2xl font-bold text-primary-900 mb-3">Welcome to your hosting hub!</h2>
+          <p className="text-gray-500 max-w-lg mx-auto mb-8">
+            Here you can manage your listed properties, view incoming booking requests, and track your earnings. Currently, this dashboard is in preview mode.
+          </p>
+          <div className="flex justify-center gap-4">
+            <div className="p-6 bg-secondary-50 rounded-2xl min-w-[150px]">
+              <div className="text-3xl font-bold text-primary-900 mb-1">0</div>
+              <div className="text-sm text-gray-500">Active Listings</div>
+            </div>
+            <div className="p-6 bg-secondary-50 rounded-2xl min-w-[150px]">
+              <div className="text-3xl font-bold text-primary-900 mb-1">0</div>
+              <div className="text-sm text-gray-500">Pending Requests</div>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      </main>
     </div>
   );
 };
 
 export default OwnerDashboard;
-

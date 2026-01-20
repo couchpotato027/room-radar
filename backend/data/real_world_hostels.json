@@ -1,0 +1,77 @@
+[
+  {
+    "name": "Zolo Stays - HSR Layout",
+    "details": {
+      "rent": "₹12,500/mo",
+      "deposit": "₹20,000",
+      "location": "HSR Layout, Bangalore",
+      "type": "Co-ed",
+      "rooms_total": 60,
+      "rooms_available": 5,
+      "rating": 4.2,
+      "reviews": 128
+    },
+    "amenities": ["WiFi", "Laundry", "Housekeeping", "Power Backup", "CCTV"],
+    "images": [
+      "https://images.unsplash.com/photo-1522771753035-48482b0d3040?w=800",
+      "https://images.unsplash.com/photo-1595155694246-fb4eeae04eae?w=800"
+    ],
+    "description": "Premium co-living space in the heart of HSR Layout. Walking distance to many tech parks."
+  },
+  {
+    "name": "Stanza Living - Kota Main",
+    "details": {
+      "rent": "₹16,000/mo",
+      "deposit": "₹32,000",
+      "location": "Indra Vihar, Kota",
+      "type": "Student (Mixed)",
+      "rooms_total": 120,
+      "rooms_available": 12,
+      "rating": 4.5,
+      "reviews": 240
+    },
+    "amenities": ["WiFi", "Mess", "Gym", "Gaming Zone", "Transport"],
+    "images": [
+      "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800",
+      "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800"
+    ],
+    "description": "Top-tier student accommodation with curated improved meals and transport to coaching centers."
+  },
+  {
+    "name": "YourSpace - Koramangala",
+    "details": {
+      "rent": "₹22,500/mo",
+      "deposit": "₹45,000",
+      "location": "Koramangala 4th Block, Bangalore",
+      "type": "Female Only",
+      "rooms_total": 45,
+      "rooms_available": 2,
+      "rating": 4.8,
+      "reviews": 85
+    },
+    "amenities": ["WiFi", "AC", "Laundry", "Bio-metric Entry", "Rooftop Garden"],
+    "images": [
+      "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=800",
+      "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?w=800"
+    ],
+    "description": "Luxury ladies PG in Koramangala. Safe, secure, and stylish living for working professionals."
+  },
+   {
+    "name": "Green View PG",
+    "details": {
+      "rent": "₹8,500/mo",
+      "deposit": "₹15,000",
+      "location": "Electronic City, Bangalore",
+      "type": "Male Only",
+      "rooms_total": 30,
+      "rooms_available": 8,
+      "rating": 3.9,
+      "reviews": 42
+    },
+    "amenities": ["WiFi", "Bike Parking", "Geyser", "RO Water"],
+    "images": [
+      "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800"
+    ],
+    "description": "Affordable accommodation for men near Wipro gate. Good food and homely atmosphere."
+  }
+]
