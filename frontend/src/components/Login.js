@@ -19,7 +19,13 @@ const Login = ({ onLogin }) => {
     try {
       const response = await axios.post(`${config.API_URL}/api/auth/login`, formData);
       onLogin(response.data.user, response.data.token);
-      navigate('/');
+
+      const role = response.data.user.role;
+      if (role === 'ADMIN' || role === 'OWNER') {
+        navigate('/owner/dashboard');
+      } else {
+        navigate('/');
+      }
     } catch (error) {
       if (error.response?.data?.error) {
         setError(error.response.data.error);
@@ -89,11 +95,17 @@ const Login = ({ onLogin }) => {
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-8">
+        <div className="text-center mt-8 space-y-2">
           <p className="text-gray-500">
             Don't have an account?{' '}
             <Link to="/signup" className="font-semibold text-primary-900 hover:text-accent-600 transition-colors">
-              Create one now
+              Create Account
+            </Link>
+          </p>
+          <p className="text-sm text-gray-400">
+            Are you a host?{' '}
+            <Link to="/owner/login" className="font-medium text-gray-600 hover:text-primary-900 transition-colors">
+              Login here
             </Link>
           </p>
         </div>

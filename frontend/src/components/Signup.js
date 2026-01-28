@@ -102,11 +102,17 @@ const Signup = ({ onLogin }) => {
           </form>
         </div>
 
-        <div className="text-center mt-8">
+        <div className="text-center mt-8 space-y-2">
           <p className="text-gray-500">
             Already have an account?{' '}
             <Link to="/login" className="font-semibold text-primary-900 hover:text-accent-600 transition-colors">
               Sign in
+            </Link>
+          </p>
+          <p className="text-sm text-gray-400">
+            Want to list your property?{' '}
+            <Link to="/owner/signup" className="font-medium text-gray-600 hover:text-primary-900 transition-colors">
+              Become a Host
             </Link>
           </p>
         </div>

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import config from '../config';
-import Header from './Header';
 import Button from './ui/Button';
 
 // Mock Component for clearer visual
@@ -41,7 +40,7 @@ const BookNow = ({ user, onLogout }) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const response = await axios.post(
         `${config.API_URL}/api/bookings`,
         { hostelId: id, ...bookingData },
@@ -60,8 +59,6 @@ const BookNow = ({ user, onLogout }) => {
 
   return (
     <div className="min-h-screen bg-gray-50/50">
-      <Header user={user} onLogout={onLogout} />
-
       <main className="max-w-5xl mx-auto px-4 py-12">
         <div className="flex items-center gap-4 mb-8">
           <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 transition">

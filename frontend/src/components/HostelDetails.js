@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import config from '../config';
-import Header from './Header';
 import Button from './ui/Button';
 
 const HostelDetails = ({ user, onLogout }) => {
@@ -29,7 +28,6 @@ const HostelDetails = ({ user, onLogout }) => {
 
   if (loading || !hostel) return (
     <div className="min-h-screen bg-secondary-50">
-      <Header user={user} onLogout={onLogout} />
       <div className="max-w-7xl mx-auto px-4 py-12 flex justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-900"></div>
       </div>
@@ -38,8 +36,6 @@ const HostelDetails = ({ user, onLogout }) => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header user={user} onLogout={onLogout} />
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Title Section */}
         <div className="mb-6">
@@ -166,14 +162,16 @@ const HostelDetails = ({ user, onLogout }) => {
                 </div>
               </div>
 
-              <Button
-                variant="primary"
-                className="w-full py-4 text-lg rounded-xl mb-4 bg-gradient-to-r from-accent-600 to-accent-500 border-none"
-                onClick={() => navigate(`/book/${id}`)}
-                disabled={!hostel.availableRooms}
-              >
-                {hostel.availableRooms > 0 ? 'Reserve' : 'Sold Out'}
-              </Button>
+              {user?.role !== 'OWNER' && (
+                <Button
+                  variant="primary"
+                  className="w-full py-4 text-lg rounded-xl mb-4 bg-gradient-to-r from-accent-600 to-accent-500 border-none"
+                  onClick={() => navigate(`/book/${id}`)}
+                  disabled={!hostel.availableRooms}
+                >
+                  {hostel.availableRooms > 0 ? 'Reserve' : 'Sold Out'}
+                </Button>
+              )}
 
               <p className="text-center text-xs text-gray-500">You won't be charged yet</p>
 

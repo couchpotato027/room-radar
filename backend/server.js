@@ -4,6 +4,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { execSync } = require('child_process');
+const path = require('path');
 const { connectDB, prisma } = require('./config/db');
 const bookingRoutes = require('./routes/bookings');
 const hostelRoutes = require('./routes/hostels');
@@ -21,7 +22,7 @@ const pushPrismaSchema = async () => {
     // Table doesn't exist, push schema
     console.log('⚠️  User table not found. Pushing Prisma schema to database...');
     try {
-      execSync('npx prisma db push --accept-data-loss', { 
+      execSync('npx prisma db push --accept-data-loss', {
         stdio: 'inherit',
         cwd: __dirname,
         env: process.env
@@ -68,7 +69,7 @@ app.get('/test', (req, res) => {
 app.post('/api/auth/signup', async (req, res) => {
   try {
     const { name, email, password, role = 'USER' } = req.body;
-    
+
     // Validate required fields
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'All fields are required (name, email, password)' });
@@ -89,7 +90,7 @@ app.post('/api/auth/signup', async (req, res) => {
     if (name.trim().length < 2) {
       return res.status(400).json({ error: 'Name must be at least 2 characters long' });
     }
-    
+
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
       where: { email: email.toLowerCase().trim() }
@@ -130,14 +131,14 @@ app.post('/api/auth/signup', async (req, res) => {
     });
   } catch (error) {
     console.error('Signup error:', error);
-    
+
     // Handle duplicate email error (Prisma unique constraint)
     if (error.code === 'P2002') {
       return res.status(400).json({ error: 'User with this email already exists. Please login instead.' });
     }
-    
+
     // Generic server error
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to create account. Please try again later.',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
@@ -147,48 +148,27 @@ app.post('/api/auth/signup', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    
+
+    console.log('Login attempt for:', email);
+
     // Find user
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() }
     });
-    
-    if (!user) {
-      // For demo, create a user if doesn't exist
-      const hashedPassword = await bcrypt.hash(password || 'password123', 10);
-      const newUser = await prisma.user.create({
-        data: {
-          name: email.split('@')[0],
-          email: email.toLowerCase(),
-          password: hashedPassword,
-          role: 'USER'
-        }
-      });
-      
-      // Generate JWT token with user ID
-      const token = jwt.sign(
-        { id: newUser.id, email: newUser.email },
-        process.env.JWT_SECRET || 'your-secret-key',
-        { expiresIn: '30d' }
-      );
 
-      return res.json({
-        token,
-        user: {
-          id: newUser.id,
-          _id: newUser.id,
-          name: newUser.name,
-          email: newUser.email,
-          role: newUser.role
-        }
-      });
+    if (!user) {
+      console.log('Login failed: User not found');
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     // Check password
     const isMatch = await bcrypt.compare(password || 'password123', user.password);
     if (!isMatch) {
+      console.log('Login failed: Password mismatch');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
+
+    console.log('Login successful for:', email, 'Role:', user.role);
 
     // Generate JWT token with user ID
     const token = jwt.sign(
@@ -220,10 +200,10 @@ app.get('/api/locations', async (req, res) => {
       where: { isActive: true },
       select: { city: true, area: true }
     });
-    
+
     const locations = {};
     const citySet = new Set();
-    
+
     hostels.forEach(hostel => {
       if (hostel.city) {
         citySet.add(hostel.city);
@@ -314,7 +294,7 @@ app.get('/api/hostels', async (req, res) => {
 
     // Execute query with pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    
+
     const [hostels, total] = await Promise.all([
       prisma.hostel.findMany({
         where,
@@ -404,7 +384,7 @@ app.get('/api/hostels/:id', async (req, res) => {
         }
       }
     });
-    
+
     if (!hostel) {
       return res.status(404).json({ error: 'Hostel not found' });
     }
@@ -450,22 +430,22 @@ app.post('/api/seed', async (req, res) => {
     // Check if hostels already exist
     const existingHostels = await prisma.hostel.count();
     if (existingHostels > 0) {
-      return res.json({ 
+      return res.json({
         message: 'Database already has data. Skipping seed.',
-        hostelsCount: existingHostels 
+        hostelsCount: existingHostels
       });
     }
 
     // Import seed data
     const bcrypt = require('bcryptjs');
     const hostels = require('./seed/hostels');
-    
+
     // Clear existing data
     await prisma.hostelImage.deleteMany({});
     await prisma.booking.deleteMany({});
     await prisma.review.deleteMany({});
     await prisma.hostel.deleteMany({});
-    
+
     // Create default owner
     let owner = await prisma.user.findUnique({ where: { email: 'owner@roomradar.com' } });
     if (!owner) {
@@ -479,11 +459,11 @@ app.post('/api/seed', async (req, res) => {
         }
       });
     }
-    
+
     // Insert all hostels
     for (const hostelData of hostels) {
       const { name, brand, city, area, address, monthlyRent, securityDeposit, genderPreference, roomType, totalRooms, availableRooms, isVerified, rating, reviewCount, images, amenities, description, nearbyPlaces, coordinates, landmark, metroStation } = hostelData;
-      
+
       await prisma.hostel.create({
         data: {
           name,
@@ -523,17 +503,17 @@ app.post('/api/seed', async (req, res) => {
         }
       });
     }
-    
+
     const finalCount = await prisma.hostel.count();
-    res.json({ 
+    res.json({
       message: 'Database seeded successfully',
       hostelsCount: finalCount
     });
   } catch (error) {
     console.error('Seed error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to seed database',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -550,13 +530,13 @@ const autoSeed = async () => {
         const bcrypt = require('bcryptjs');
         const hostels = require('./seed/hostels');
         const seedPrisma = new PrismaClient();
-        
+
         // Clear existing hostels
         await seedPrisma.hostelImage.deleteMany({});
         await seedPrisma.booking.deleteMany({});
         await seedPrisma.review.deleteMany({});
         await seedPrisma.hostel.deleteMany({});
-        
+
         // Create default owner
         let owner = await seedPrisma.user.findUnique({ where: { email: 'owner@roomradar.com' } });
         if (!owner) {
@@ -570,11 +550,11 @@ const autoSeed = async () => {
             }
           });
         }
-        
+
         // Insert all hostels
         for (const hostelData of hostels) {
           const { name, brand, city, area, address, monthlyRent, securityDeposit, genderPreference, roomType, totalRooms, availableRooms, isVerified, rating, reviewCount, images, amenities, description, nearbyPlaces, coordinates, landmark, metroStation } = hostelData;
-          
+
           await seedPrisma.hostel.create({
             data: {
               name,
@@ -614,7 +594,7 @@ const autoSeed = async () => {
             }
           });
         }
-        
+
         await seedPrisma.$disconnect();
         console.log(`✅ Database seeded successfully with ${hostels.length} hostels`);
       } catch (seedError) {
@@ -629,13 +609,69 @@ const autoSeed = async () => {
   }
 };
 
-// Run auto-seed after schema push
-setTimeout(() => {
-  autoSeed();
-}, 5000); // Wait 5 seconds for schema to be pushed
+// Create Default Admin (Super Owner) on startup
+const createDefaultAdmin = async () => {
+  try {
+    const email = process.env.OWNER_EMAIL;
+    const password = process.env.OWNER_PASSWORD;
+
+    if (!email || !password) {
+      console.log('⚠️  OWNER_EMAIL or OWNER_PASSWORD not set. Skipping Admin creation.');
+      return;
+    }
+
+    const { PrismaClient } = require('@prisma/client');
+    const bcrypt = require('bcryptjs');
+    const prismaClient = new PrismaClient();
+
+    const existingAdmin = await prismaClient.user.findUnique({
+      where: { email: email.toLowerCase() }
+    });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    if (existingAdmin) {
+      // Update existing user to ensure they are ADMIN and have correct password
+      await prismaClient.user.update({
+        where: { email: email.toLowerCase() },
+        data: {
+          role: 'ADMIN',
+          password: hashedPassword
+        }
+      });
+      console.log('✅ Super Owner (Admin) account verified and updated.');
+    } else {
+      // Create new Admin user
+      console.log('creating admin user...');
+      await prismaClient.user.create({
+        data: {
+          name: 'Super Owner',
+          email: email.toLowerCase(),
+          password: hashedPassword,
+          role: 'ADMIN'
+        }
+      });
+      console.log('✅ Super Owner (Admin) account created successfully.');
+    }
+
+    await prismaClient.$disconnect();
+  } catch (error) {
+    console.error('❌ Failed to create Admin account:', error);
+  }
+};
+
+// Run auto-seed and admin creation after schema push
+setTimeout(async () => {
+  await createDefaultAdmin();
+  await autoSeed();
+}, 5000);
 
 // Admin endpoint to view users
-app.get('/api/admin/users', async (req, res) => {
+app.get('/api/admin/users', auth, async (req, res) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ error: 'Access denied. Admin only.' });
+  }
+
   try {
     const users = await prisma.user.findMany({
       select: {
@@ -656,7 +692,7 @@ app.get('/api/admin/users', async (req, res) => {
         createdAt: 'desc'
       }
     });
-    
+
     res.json({
       success: true,
       count: users.length,
@@ -673,13 +709,54 @@ app.get('/api/admin/users', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching users:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       error: 'Server error',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
+
+// Admin endpoint to view ALL hostels
+app.get('/api/admin/hostels', auth, async (req, res) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ error: 'Access denied. Admin only.' });
+  }
+
+  try {
+    const hostels = await prisma.hostel.findMany({
+      include: {
+        owner: {
+          select: { name: true, email: true }
+        },
+        _count: {
+          select: { bookings: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json(hostels.map(hostel => ({
+      ...hostel,
+      _id: hostel.id,
+      images: hostel.images ? [] : [], // We might need to fetch images if defined differently, assuming basic schema
+      // Fix images mapping if necessary, relying on frontend to handle
+      ownerName: hostel.owner.name,
+      ownerEmail: hostel.owner.email,
+      bookingCount: hostel._count.bookings
+    })));
+  } catch (error) {
+    console.error('Error fetching admin hostels:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Upload routes
+const uploadRoutes = require('./routes/upload');
+app.use('/api/upload', uploadRoutes);
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {

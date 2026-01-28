@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import config from '../config';
-import Header from './Header';
 import HostelCard from './HostelCard';
 import Button from './ui/Button';
 
@@ -80,8 +79,6 @@ const Home = ({ user, onLogout }) => {
 
   return (
     <div className="min-h-screen bg-secondary-50 font-sans text-primary-900">
-      <Header user={user} onLogout={onLogout} />
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
 
         {/* HERO SECTION */}
@@ -103,12 +100,14 @@ const Home = ({ user, onLogout }) => {
                 Discover standard-setting hostels and co-living spaces.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Button variant="primary" size="lg" onClick={() => navigate('/list-hostel')}>
+                <Button variant="primary" size="lg" onClick={() => navigate(user?.role === 'OWNER' ? '/list-hostel' : '/owner/login')}>
                   List Your Property
                 </Button>
-                <Button variant="outline" size="lg" onClick={() => navigate('/dashboard')}>
-                  View Bookings
-                </Button>
+                {(!user || user.role !== 'OWNER') && (
+                  <Button variant="outline" size="lg" onClick={() => navigate('/dashboard')}>
+                    View Bookings
+                  </Button>
+                )}
               </div>
             </div>
 

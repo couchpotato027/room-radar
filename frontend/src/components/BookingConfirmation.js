@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import config from '../config';
-import Header from './Header';
 import Button from './ui/Button';
 
 const BookingConfirmation = ({ user, onLogout }) => {
@@ -13,7 +12,7 @@ const BookingConfirmation = ({ user, onLogout }) => {
   useEffect(() => {
     const fetchBooking = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         const res = await axios.get(`${config.API_URL}/api/bookings/single/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         }).catch(async () => {
@@ -31,13 +30,12 @@ const BookingConfirmation = ({ user, onLogout }) => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header user={user} onLogout={onLogout} />
       <div className="max-w-2xl mx-auto px-4 py-20 text-center">
         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-8 animate-fade-in">
           <span className="text-4xl">🎉</span>
         </div>
 
-        <h1 className="text-4xl font-bold text-primary-900 mb-4">You're going to {booking.hostelId?.city}!</h1>
+        <h1 className="text-4xl font-bold text-primary-900 mb-4">Your hostel journey begins here!</h1>
         <p className="text-gray-500 text-lg mb-12">
           Confirmation code: <span className="font-mono font-bold text-primary-900">#{String(booking._id).slice(-6).toUpperCase()}</span>
         </p>

@@ -28,16 +28,30 @@ const Header = ({ user, onLogout }) => {
           </Link>
 
           {/* Desktop Navigation */}
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link to="/" className={navLinkClass('/')}>Browse</Link>
-            <Link to="/list-hostel" className={navLinkClass('/list-hostel')}>List Property</Link>
+            {(!user || user.role !== 'ADMIN') && (
+              <Link to="/" className={navLinkClass('/')}>Browse</Link>
+            )}
+
+            {/* Show List Property if user is an OWNER or ADMIN */}
+            {user && (user.role === 'OWNER' || user.role === 'ADMIN') && (
+              <Link to="/list-hostel" className={navLinkClass('/list-hostel')}>List Property</Link>
+            )}
+
             {user && (
               <>
-                <Link to="/dashboard" className={navLinkClass('/dashboard')}>My Bookings</Link>
-                {user.role === 'OWNER' && (
+                {user.role !== 'OWNER' && user.role !== 'ADMIN' && (
+                  <Link to="/dashboard" className={navLinkClass('/dashboard')}>My Bookings</Link>
+                )}
+                {(user.role === 'OWNER' || user.role === 'ADMIN') && (
                   <Link to="/owner/dashboard" className={navLinkClass('/owner/dashboard')}>Dashboard</Link>
                 )}
               </>
+            )}
+
+            {(!user || user.role !== 'ADMIN') && (
+              <Link to="/about" className={navLinkClass('/about')}>About Us</Link>
             )}
           </nav>
 
@@ -45,9 +59,10 @@ const Header = ({ user, onLogout }) => {
           <div className="flex items-center space-x-4">
             {user ? (
               <div className="flex items-center space-x-4">
-                <span className="text-sm font-medium text-gray-600 hidden sm:block">
-                  {user.name.split(' ')[0]}
-                </span>
+                <div className="hidden sm:flex flex-col items-end">
+                  <span className="text-sm font-medium text-gray-900">{user.name.split(' ')[0]}</span>
+                  <span className="text-xs text-accent-600 font-bold tracking-wide uppercase">{user.role}</span>
+                </div>
                 <Button variant="outline" size="sm" onClick={onLogout} className="rounded-full">
                   Sign Out
                 </Button>

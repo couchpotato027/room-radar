@@ -24,14 +24,16 @@ const ListHostel = ({ user, onLogout }) => {
   const [formData, setFormData] = useState({
     name: '', city: '', area: '', address: '', monthlyRent: '', securityDeposit: '',
     genderPreference: 'MIXED', roomType: 'SHARED', totalRooms: '', availableRooms: '',
-    description: '', images: '', landmark: '', metroStation: '',
+    description: '', landmark: '', metroStation: '',
     amenities: { wifi: true, ac: false, mess: true, laundry: true, parking: false, cctv: true, powerBackup: true, gym: false, rooftop: false }
   });
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, checked } = e.target;
     if (name.startsWith('amenities.')) {
       const field = name.split('.')[1];
       setFormData(prev => ({ ...prev, amenities: { ...prev.amenities, [field]: checked } }));
@@ -40,27 +42,66 @@ const ListHostel = ({ user, onLogout }) => {
     }
   };
 
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    setSelectedImages(prev => [...prev, ...files]);
+
+    // Create preview URLs
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setPreviewUrls(prev => [...prev, ...newPreviews]);
+  };
+
+  const removeImage = (index) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
+      let imageUrls = [];
+
+      // 1. Upload Images
+      if (selectedImages.length > 0) {
+        const imageFormData = new FormData();
+        selectedImages.forEach(file => {
+          imageFormData.append('images', file);
+        });
+
+        const uploadResponse = await axios.post(`${config.API_URL}/api/upload`, imageFormData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        // Prepend API URL to relative paths if needed, or store relative paths
+        // We'll store relative paths and handle full URL in the frontend config or component
+        imageUrls = uploadResponse.data.urls.map(url => `${config.API_URL}${url}`);
+      } else {
+        // Default placeholder if no images
+        imageUrls = ['https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800'];
+      }
+
+      // 2. Submit Hostel Data
       const payload = {
         ...formData,
         monthlyRent: parseInt(formData.monthlyRent),
         securityDeposit: formData.securityDeposit ? parseInt(formData.securityDeposit) : undefined,
         totalRooms: parseInt(formData.totalRooms || 50),
         availableRooms: parseInt(formData.availableRooms || formData.totalRooms || 50),
-        images: formData.images ? formData.images.split(',').map(u => u.trim()).filter(Boolean) :
-          ['https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800'],
+        images: imageUrls,
         nearbyPlaces: []
       };
 
       await axios.post(`${config.API_URL}/api/hostels`, payload, { headers: { Authorization: `Bearer ${token}` } });
-      navigate('/');
+      navigate('/owner/dashboard'); // Redirect to dashboard instead of home
     } catch (err) {
+      console.error(err);
       setError(err.response?.data?.error || 'Failed to list hostel');
     } finally {
       setSubmitting(false);
@@ -92,8 +133,15 @@ const ListHostel = ({ user, onLogout }) => {
                   placeholder="e.g. Sunny Villa" />
               </InputGroup>
               <InputGroup label="City">
-                <input type="text" name="city" required value={formData.city} onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl bg-secondary-50 border-transparent focus:bg-white focus:border-accent-500 transition-all" />
+                <select name="city" required value={formData.city} onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-xl bg-secondary-50 border-transparent focus:bg-white focus:border-accent-500 transition-all">
+                  <option value="">Select City</option>
+                  <option value="Kota">Kota</option>
+                  <option value="Delhi">Delhi</option>
+                  <option value="Mumbai">Mumbai</option>
+                  <option value="Bangalore">Bangalore</option>
+                  <option value="Pune">Pune</option>
+                </select>
               </InputGroup>
               <InputGroup label="Area / Locality">
                 <input type="text" name="area" required value={formData.area} onChange={handleChange}
@@ -155,10 +203,40 @@ const ListHostel = ({ user, onLogout }) => {
               </div>
             </div>
 
-            <InputGroup label="Image URLs (Comma separated)">
-              <textarea name="images" value={formData.images} onChange={handleChange} rows={3}
-                className="w-full px-4 py-3 rounded-xl bg-secondary-50 border-transparent focus:bg-white focus:border-accent-500 transition-all"
-                placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg" />
+            <InputGroup label="Upload Photos">
+              <div className="border-2 border-dashed border-secondary-300 rounded-xl p-6 text-center hover:border-accent-500 transition-colors bg-secondary-50">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                  id="image-upload"
+                />
+                <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center justify-center">
+                  <span className="text-4xl mb-2">📸</span>
+                  <span className="text-primary-900 font-medium">Click to upload photos</span>
+                  <span className="text-sm text-gray-500 mt-1">PNG, JPG up to 5MB</span>
+                </label>
+              </div>
+
+              {/* Image Previews */}
+              {previewUrls.length > 0 && (
+                <div className="grid grid-cols-3 md:grid-cols-5 gap-4 mt-4">
+                  {previewUrls.map((url, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-secondary-200 group">
+                      <img src={url} alt={`Preview ${idx}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(idx)}
+                        className="absolute top-1 right-1 bg-white/90 p-1 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-all text-red-500 hover:text-red-700"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </InputGroup>
 
             <InputGroup label="Description">

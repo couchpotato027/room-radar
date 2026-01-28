@@ -25,6 +25,7 @@ module.exports = {
       },
       fontFamily: {
         sans: ['Outfit', 'sans-serif'],
+        serif: ['Playfair Display', 'serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

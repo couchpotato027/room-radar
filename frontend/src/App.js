@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
 import Signup from './components/Signup';
+import OwnerSignup from './components/OwnerSignup';
+import OwnerLogin from './components/OwnerLogin';
 import Home from './components/Home';
 import HostelDetails from './components/HostelDetails';
 import BookNow from './components/BookNow';
@@ -9,6 +11,8 @@ import BookingConfirmation from './components/BookingConfirmation';
 import UserDashboard from './components/UserDashboard';
 import OwnerDashboard from './components/OwnerDashboard';
 import ListHostel from './components/ListHostel';
+import UserLayout from './components/UserLayout';
+import AboutUs from './components/AboutUs';
 import './App.css';
 
 function App() {
@@ -17,25 +21,25 @@ function App() {
 
   useEffect(() => {
     // Check if user is already logged in
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
+    const token = sessionStorage.getItem('token');
+    const userData = sessionStorage.getItem('user');
+
     // If old demo token is detected, clear everything
     if (token === 'demo-token-123') {
-      console.warn('Old demo token detected! Clearing localStorage...');
-      localStorage.clear();
+      console.warn('Old demo token detected! Clearing sessionStorage...');
+      sessionStorage.clear();
       setUser(null);
       setLoading(false);
       return;
     }
-    
+
     if (token && userData) {
       try {
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
       } catch (e) {
         console.error('Error parsing user data:', e);
-        localStorage.clear();
+        sessionStorage.clear();
       }
     }
     setLoading(false);
@@ -43,18 +47,18 @@ function App() {
 
   const handleLogin = (userData, token) => {
     // Clear any old data first
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+
     // Set new user data
     setUser(userData);
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(userData));
+    sessionStorage.setItem('token', token);
+    sessionStorage.setItem('user', JSON.stringify(userData));
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
     setUser(null);
   };
 
@@ -72,42 +76,94 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route 
-          path="/login" 
-          element={!user ? <Login onLogin={handleLogin} /> : <Navigate to="/" />} 
+        <Route
+          path="/login"
+          element={!user ? <Login onLogin={handleLogin} /> : <Navigate to="/" />}
         />
-        <Route 
-          path="/signup" 
-          element={!user ? <Signup onLogin={handleLogin} /> : <Navigate to="/" />} 
+        <Route
+          path="/signup"
+          element={!user ? <Signup onLogin={handleLogin} /> : <Navigate to="/" />}
         />
-        <Route 
-          path="/" 
-          element={user ? <Home user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} 
+        <Route
+          path="/"
+          element={user ? (
+            <UserLayout user={user} onLogout={handleLogout}>
+              <Home user={user} />
+            </UserLayout>
+          ) : (
+            <Navigate to="/login" />
+          )}
         />
-        <Route 
-          path="/hostel/:id" 
-          element={user ? <HostelDetails user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} 
+        <Route
+          path="/about"
+          element={
+            <UserLayout user={user} onLogout={handleLogout}>
+              <AboutUs user={user} />
+            </UserLayout>
+          }
         />
-        <Route 
-          path="/book/:id" 
-          element={user ? <BookNow user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} 
+        <Route
+          path="/hostel/:id"
+          element={user ? (
+            <UserLayout user={user} onLogout={handleLogout}>
+              <HostelDetails user={user} />
+            </UserLayout>
+          ) : (
+            <Navigate to="/login" />
+          )}
         />
-        <Route 
-          path="/booking/confirmation/:id" 
-          element={user ? <BookingConfirmation user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} 
+        <Route
+          path="/book/:id"
+          element={user ? (
+            <UserLayout user={user} onLogout={handleLogout}>
+              <BookNow user={user} />
+            </UserLayout>
+          ) : (
+            <Navigate to="/login" />
+          )}
         />
-        <Route 
-          path="/dashboard" 
-          element={user ? <UserDashboard key={user._id || user.id} user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} 
+        <Route
+          path="/booking/confirmation/:id"
+          element={user ? (
+            <UserLayout user={user} onLogout={handleLogout}>
+              <BookingConfirmation user={user} />
+            </UserLayout>
+          ) : (
+            <Navigate to="/login" />
+          )}
         />
-        <Route 
-          path="/owner/dashboard" 
-          element={user && user.role === 'OWNER' ? <OwnerDashboard user={user} onLogout={handleLogout} /> : <Navigate to="/" />} 
+        <Route
+          path="/dashboard"
+          element={user ? (
+            <UserLayout user={user} onLogout={handleLogout}>
+              <UserDashboard user={user} />
+            </UserLayout>
+          ) : (
+            <Navigate to="/login" />
+          )}
         />
-        <Route 
-          path="/list-hostel" 
-          element={user ? <ListHostel user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} 
+
+        {/* Public Owner Routes */}
+        <Route
+          path="/owner/login"
+          element={!user ? <OwnerLogin onLogin={handleLogin} /> : <Navigate to={user.role === 'OWNER' ? '/owner/dashboard' : '/'} />}
         />
+        <Route
+          path="/owner/signup"
+          element={!user ? <OwnerSignup onLogin={handleLogin} /> : <Navigate to={user.role === 'OWNER' ? '/owner/dashboard' : '/'} />}
+        />
+
+        {/* Protected Owner Routes */}
+        <Route
+          path="/owner/dashboard"
+          element={user && (user.role === 'OWNER' || user.role === 'ADMIN') ? <OwnerDashboard user={user} onLogout={handleLogout} /> : <Navigate to="/" />}
+        />
+        <Route
+          path="/list-hostel"
+          element={user && (user.role === 'OWNER' || user.role === 'ADMIN') ? <ListHostel user={user} onLogout={handleLogout} /> : <Navigate to="/" />}
+        />
+
+        {/* Catch-all route */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>

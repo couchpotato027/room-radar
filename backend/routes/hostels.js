@@ -8,7 +8,7 @@ const auth = require('../middleware/auth');
 router.post('/', auth, async (req, res) => {
   try {
     let userId = req.user._id || req.user.id;
-    
+
     // If demo user, create or find a user
     let user = req.user;
     if (!userId || userId === 'demo-user-id') {
@@ -127,7 +127,7 @@ router.post('/', auth, async (req, res) => {
       },
       nearbyPlaces: hostel.nearbyPlaces || []
     };
-    
+
     res.status(201).json(transformedHostel);
   } catch (error) {
     console.error('Error creating hostel:', error);
@@ -139,7 +139,7 @@ router.post('/', auth, async (req, res) => {
 router.get('/owner', auth, async (req, res) => {
   try {
     let userId = req.user._id || req.user.id;
-    
+
     // Handle demo users
     if (!userId || userId === 'demo-user-id') {
       let user = await prisma.user.findUnique({ where: { email: 'demo@roomradar.com' } });
@@ -158,7 +158,7 @@ router.get('/owner', auth, async (req, res) => {
     } else {
       userId = parseInt(userId);
     }
-    
+
     const hostels = await prisma.hostel.findMany({
       where: { ownerId: userId },
       include: {
@@ -166,7 +166,7 @@ router.get('/owner', auth, async (req, res) => {
       },
       orderBy: { createdAt: 'desc' }
     });
-    
+
     // Transform hostels
     const transformedHostels = hostels.map(hostel => ({
       ...hostel,
@@ -189,7 +189,7 @@ router.get('/owner', auth, async (req, res) => {
       },
       nearbyPlaces: hostel.nearbyPlaces || []
     }));
-    
+
     res.json(transformedHostels);
   } catch (error) {
     console.error('Error fetching owner hostels:', error);
@@ -202,28 +202,28 @@ router.put('/:id', auth, async (req, res) => {
   try {
     const userId = parseInt(req.user._id || req.user.id);
     const hostelId = parseInt(req.params.id);
-    
+
     const hostel = await prisma.hostel.findUnique({
       where: { id: hostelId }
     });
-    
+
     if (!hostel) {
       return res.status(404).json({ error: 'Hostel not found' });
     }
-    
+
     // Verify user is owner of this hostel
     if (hostel.ownerId !== userId && req.user.role !== 'ADMIN') {
       return res.status(403).json({ error: 'Unauthorized. Only the owner can update this hostel.' });
     }
-    
+
     // Prepare update data
     const updateData = {};
     const allowedUpdates = [
       'name', 'city', 'area', 'address', 'state', 'pincode', 'monthlyRent', 'securityDeposit',
       'genderPreference', 'roomType', 'totalRooms', 'availableRooms',
-      'description', 'landmark', 'metroStation', 'latitude', 'longitude', 'brand'
+      'description', 'landmark', 'metroStation', 'latitude', 'longitude', 'brand', 'isActive'
     ];
-    
+
     allowedUpdates.forEach(field => {
       if (req.body[field] !== undefined) {
         updateData[field] = req.body[field];
@@ -255,7 +255,7 @@ router.put('/:id', auth, async (req, res) => {
       await prisma.hostelImage.deleteMany({
         where: { hostelId }
       });
-      
+
       // Create new images
       await prisma.hostelImage.createMany({
         data: req.body.images.map(url => ({
@@ -264,7 +264,7 @@ router.put('/:id', auth, async (req, res) => {
         }))
       });
     }
-    
+
     const updatedHostel = await prisma.hostel.update({
       where: { id: hostelId },
       data: updateData,
@@ -295,7 +295,7 @@ router.put('/:id', auth, async (req, res) => {
       },
       nearbyPlaces: updatedHostel.nearbyPlaces || []
     };
-    
+
     res.json(transformedHostel);
   } catch (error) {
     console.error('Error updating hostel:', error);
@@ -308,26 +308,26 @@ router.delete('/:id', auth, async (req, res) => {
   try {
     const userId = parseInt(req.user._id || req.user.id);
     const hostelId = parseInt(req.params.id);
-    
+
     const hostel = await prisma.hostel.findUnique({
       where: { id: hostelId }
     });
-    
+
     if (!hostel) {
       return res.status(404).json({ error: 'Hostel not found' });
     }
-    
+
     // Verify user is owner of this hostel or is admin
     if (hostel.ownerId !== userId && req.user.role !== 'ADMIN') {
       return res.status(403).json({ error: 'Unauthorized. Only the owner or admin can delete this hostel.' });
     }
-    
+
     // Soft delete by setting isActive to false (better practice)
     const updatedHostel = await prisma.hostel.update({
       where: { id: hostelId },
       data: { isActive: false }
     });
-    
+
     res.json({ message: 'Hostel deleted successfully', hostel: { ...updatedHostel, _id: updatedHostel.id } });
   } catch (error) {
     console.error('Error deleting hostel:', error);

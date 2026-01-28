@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import config from '../config';
-import Header from './Header';
 import Button from './ui/Button';
 
 const UserDashboard = ({ user, onLogout }) => {
@@ -13,7 +12,7 @@ const UserDashboard = ({ user, onLogout }) => {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         if (!token) return;
         const res = await axios.get(`${config.API_URL}/api/bookings/user`, { headers: { Authorization: `Bearer ${token}` } });
         setBookings(res.data);
@@ -26,7 +25,7 @@ const UserDashboard = ({ user, onLogout }) => {
   const handleCancel = async (id) => {
     if (!window.confirm('Cancel this booking?')) return;
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       await axios.put(`${config.API_URL}/api/bookings/cancel/${id}`, {}, { headers: { Authorization: `Bearer ${token}` } });
       window.location.reload();
     } catch (e) { alert('Failed to cancel'); }
@@ -34,8 +33,6 @@ const UserDashboard = ({ user, onLogout }) => {
 
   return (
     <div className="min-h-screen bg-secondary-50">
-      <Header user={user} onLogout={onLogout} />
-
       <main className="max-w-7xl mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold text-primary-900 mb-8">My Trips</h1>
 
@@ -60,8 +57,12 @@ const UserDashboard = ({ user, onLogout }) => {
                     className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                     alt={booking.hostelId?.name}
                   />
-                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-primary-900 uppercase">
-                    {booking.bookingStatus}
+                  <div className={`absolute top-4 right-4 backdrop-blur px-3 py-1 rounded-full text-xs font-bold uppercase ${booking.bookingStatus === 'CONFIRMED' ? 'bg-green-100/90 text-green-800' :
+                    booking.bookingStatus === 'REJECTED' ? 'bg-red-100/90 text-red-800' :
+                      booking.bookingStatus === 'CANCELLED' ? 'bg-gray-100/90 text-gray-800' :
+                        'bg-yellow-100/90 text-yellow-800'
+                    }`}>
+                    {booking.bookingStatus || 'PENDING'}
                   </div>
                 </div>
 
