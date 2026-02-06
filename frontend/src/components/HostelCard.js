@@ -1,5 +1,4 @@
 import React from 'react';
-import Card from './ui/Card';
 
 const amenityIcons = {
   wifi: { icon: '📶', label: 'WiFi' },
@@ -16,7 +15,7 @@ const amenityIcons = {
 const HostelCard = ({ hostel, onClick }) => {
   const {
     _id, id, name, city, area, monthlyRent,
-    rating, reviewCount, images, amenities
+    rating, reviewCount, images, amenities, availableRooms
   } = hostel;
 
   const hostelId = _id || id;
@@ -26,70 +25,80 @@ const HostelCard = ({ hostel, onClick }) => {
     .filter(([key]) => amenities?.[key])
     .slice(0, 3);
 
-  const handleKeyDown = (event) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      onClick && onClick(hostelId);
-    }
-  };
-
   return (
-    <Card
-      className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-none ring-1 ring-secondary-200"
+    <article
+      className="group bg-white rounded-2xl overflow-hidden border border-stone-100 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
       onClick={() => onClick && onClick(hostelId)}
-      onKeyDown={handleKeyDown}
       tabIndex={0}
       role="button"
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onClick?.(hostelId)}
     >
+      {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
           src={safeImage}
           alt={name}
-          className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
+          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
-        <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-          <div>
-            <span className="inline-block px-2 py-1 bg-white/20 backdrop-blur-md rounded-lg text-xs font-medium text-white mb-1 border border-white/20">
-              {city}, {area}
-            </span>
-            <h3 className="text-lg font-bold text-white leading-tight drop-shadow-md truncate w-full">
-              {name}
-            </h3>
-          </div>
-        </div>
-
-        {rating && (
-          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur text-primary-900 text-xs font-bold px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
-            <span>★</span> {rating} <span className="font-normal text-gray-500">({reviewCount})</span>
+        {/* Rating Badge */}
+        {rating > 0 && (
+          <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm text-stone-900 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
+            <span className="text-amber-500">★</span> {rating.toFixed(1)}
           </div>
         )}
+
+        {/* Location */}
+        <div className="absolute bottom-3 left-3">
+          <span className="text-xs font-medium text-white/90 bg-black/30 backdrop-blur-sm px-2 py-1 rounded-md">
+            {city}{area ? `, ${area}` : ''}
+          </span>
+        </div>
       </div>
 
-      <div className="p-4 space-y-3 bg-white">
-        <div className="flex justify-between items-center">
-          <h4 className="text-xl font-bold text-primary-900">
-            ₹{monthlyRent?.toLocaleString()} <span className="text-xs font-normal text-gray-500">/mo</span>
-          </h4>
+      {/* Content */}
+      <div className="p-4 space-y-3">
+        <div className="flex justify-between items-start gap-2">
+          <h3 className="font-semibold text-stone-900 leading-tight line-clamp-1 flex-1">
+            {name}
+          </h3>
+          {availableRooms !== undefined && (
+            <span className={`text-xs font-medium px-2 py-0.5 rounded ${availableRooms > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+              {availableRooms > 0 ? `${availableRooms} left` : 'Full'}
+            </span>
+          )}
         </div>
 
+        {/* Price */}
+        <div className="flex items-baseline gap-1">
+          <span className="text-xl font-bold text-stone-900">₹{monthlyRent?.toLocaleString()}</span>
+          <span className="text-sm text-stone-500">/month</span>
+        </div>
+
+        {/* Amenities */}
         {activeAmenities.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-2 border-t border-secondary-100">
-            {activeAmenities.map(([key, { icon, label }]) => (
-              <span key={key} className="text-[10px] font-medium uppercase tracking-wider text-gray-500 bg-secondary-50 px-2 py-1 rounded-md">
+          <div className="flex flex-wrap gap-1.5 pt-2 border-t border-stone-100">
+            {activeAmenities.map(([key, { label }]) => (
+              <span key={key} className="text-[10px] font-medium uppercase tracking-wide text-stone-500 bg-stone-50 px-2 py-1 rounded">
                 {label}
               </span>
             ))}
             {Object.keys(amenities || {}).filter(k => amenities[k]).length > 3 && (
-              <span className="text-[10px] font-medium text-accent-600 bg-accent-50 px-2 py-1 rounded-md">
-                +{Object.keys(amenities).filter(k => amenities[k]).length - 3} more
+              <span className="text-[10px] font-medium text-amber-700 bg-amber-50 px-2 py-1 rounded">
+                +{Object.keys(amenities).filter(k => amenities[k]).length - 3}
               </span>
             )}
           </div>
         )}
+
+        {/* CTA */}
+        <button className="w-full mt-2 py-2 text-sm font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors">
+          View Details
+        </button>
       </div>
-    </Card>
+    </article>
   );
 };
 

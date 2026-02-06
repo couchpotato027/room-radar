@@ -7,40 +7,36 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          50: '#f9fafb',
-          100: '#f3f4f6',
-          200: '#e5e7eb',
-          800: '#1f2937',
-          900: '#111827', // Charcoal / Black
-        },
-        secondary: {
-          50: '#fafaf9', // Stone 50
-          100: '#f5f5f4', // Stone 100
-          200: '#e7e5e4', // Stone 200
+          50: '#fafaf9',
+          100: '#f5f5f4',
+          200: '#e7e5e4',
+          300: '#d6d3d1',
+          400: '#a8a29e',
+          500: '#78716c',
+          600: '#57534e',
+          700: '#44403c',
+          800: '#292524',
+          900: '#1c1917',
         },
         accent: {
-          500: '#b45309', // Muted Gold/Bronze
-          600: '#92400e',
+          50: '#fffbeb',
+          100: '#fef3c7',
+          400: '#fbbf24',
+          500: '#f59e0b',
+          600: '#d97706',
+          700: '#b45309',
         }
       },
       fontFamily: {
-        sans: ['Outfit', 'sans-serif'],
-        serif: ['Playfair Display', 'serif'],
+        sans: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
       },
-      animation: {
-        'fade-in': 'fadeIn 0.5s ease-in-out',
-        'slide-up': 'slideUp 0.3s ease-out',
+      borderRadius: {
+        '2xl': '1rem',
+        '3xl': '1.5rem',
       },
-      keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        slideUp: {
-          '0%': { transform: 'translateY(10px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
-        },
-      },
+      boxShadow: {
+        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+      }
     },
   },
   plugins: [

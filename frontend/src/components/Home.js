@@ -78,24 +78,24 @@ const Home = ({ user, onLogout }) => {
   ), [filters.city, locations]);
 
   return (
-    <div className="min-h-screen bg-secondary-50 font-sans text-primary-900">
+    <div className="min-h-screen bg-stone-50 font-sans text-stone-900">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
 
         {/* HERO SECTION */}
-        <section className="relative overflow-hidden rounded-3xl bg-secondary-100 p-8 lg:p-12">
+        <section className="relative overflow-hidden rounded-3xl bg-stone-100 p-8 lg:p-12">
           <div className="relative z-10 grid gap-12 lg:grid-cols-2 lg:items-center">
             <div className="space-y-8">
-              <div className="inline-flex items-center rounded-full bg-white px-3 py-1 text-sm font-medium text-accent-600 shadow-sm">
-                <span className="mr-2 h-2 w-2 rounded-full bg-accent-500"></span>
+              <div className="inline-flex items-center rounded-full bg-white px-3 py-1 text-sm font-medium text-amber-700 shadow-sm">
+                <span className="mr-2 h-2 w-2 rounded-full bg-amber-500"></span>
                 Curated Living Spaces
               </div>
-              <h1 className="text-5xl font-bold tracking-tight text-primary-900 sm:text-6xl leading-tight">
+              <h1 className="text-4xl font-bold tracking-tight text-stone-900 sm:text-5xl lg:text-6xl leading-tight">
                 Find your place <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-600 to-accent-500">
+                <span className="text-amber-600">
                   to call home.
                 </span>
               </h1>
-              <p className="text-lg text-gray-600 max-w-lg">
+              <p className="text-lg text-stone-600 max-w-lg">
                 Verified listings, transparent pricing, and a community-first approach.
                 Discover standard-setting hostels and co-living spaces.
               </p>
@@ -114,9 +114,9 @@ const Home = ({ user, onLogout }) => {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-4 lg:gap-6">
               {stats.map((stat, idx) => (
-                <div key={idx} className={`bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-white/50 shadow-sm ${idx === 2 ? 'col-span-2' : ''}`}>
-                  <p className="text-3xl font-bold text-primary-900">{stat.value}</p>
-                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mt-1">{stat.label}</p>
+                <div key={idx} className={`bg-white/80 backdrop-blur-sm p-6 rounded-2xl border border-stone-200 shadow-sm ${idx === 2 ? 'col-span-2' : ''}`}>
+                  <p className="text-3xl font-bold text-stone-900">{stat.value}</p>
+                  <p className="text-sm font-medium text-stone-500 uppercase tracking-wider mt-1">{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -125,7 +125,7 @@ const Home = ({ user, onLogout }) => {
 
         {/* SEARCH & FILTERS */}
         <section className="space-y-6">
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-secondary-200">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               <div className="lg:col-span-2">
                 <label className="block text-xs font-semibold uppercase text-gray-500 mb-2">Search Location</label>
